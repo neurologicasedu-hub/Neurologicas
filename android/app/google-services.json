@@ -1,0 +1,100 @@
+{
+  "project_info": {
+    "project_number": "904944686567",
+    "project_id": "neurologicascalculator",
+    "storage_bucket": "neurologicascalculator.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:904944686567:android:5fbc54e57ba5bf90eb5942",
+        "android_client_info": {
+          "package_name": "com.example.neuro_calculator"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "904944686567-5niviacdbi3ikj2aj4vj0q0qiosk4rhj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.neuro_calculator",
+            "certificate_hash": "e4654b568b0ce87a3411fdc45df544f0b49c826d"
+          }
+        },
+        {
+          "client_id": "904944686567-osd85vqnbudcbu948nr6m9edsote0pq2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyARu2wJbepG67WOlaCmj7S5HDy12prB9fY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "904944686567-osd85vqnbudcbu948nr6m9edsote0pq2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "904944686567-bj3ohrh7mc3bud3vhff5o522d97aae7k.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.neurologicas.app",
+                "app_store_id": "214453221"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:904944686567:android:79d4c6e062bd87f2eb5942",
+        "android_client_info": {
+          "package_name": "com.neurologicas.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "904944686567-jmjdrigq5fdalveg9d64j8kjm0i7t7qk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.neurologicas.app",
+            "certificate_hash": "e4654b568b0ce87a3411fdc45df544f0b49c826d"
+          }
+        },
+        {
+          "client_id": "904944686567-osd85vqnbudcbu948nr6m9edsote0pq2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyARu2wJbepG67WOlaCmj7S5HDy12prB9fY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "904944686567-osd85vqnbudcbu948nr6m9edsote0pq2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "904944686567-bj3ohrh7mc3bud3vhff5o522d97aae7k.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.neurologicas.app",
+                "app_store_id": "214453221"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
