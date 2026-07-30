@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/sf12_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class SF12Screen extends StatefulWidget {
   const SF12Screen({super.key});
@@ -23,8 +25,8 @@ class _SF12ScreenState extends State<SF12Screen> {
     {'title': 'Quanto você se preocupou com problemas emocionais nas últimas 4 semanas?', 'field': 'saudeEmocional', 'options': ['Nunca (5)', 'Raramente (4)', 'Às vezes (3)', 'Frequentemente (2)', 'Sempre (1)'], 'values': [5, 4, 3, 2, 1]},
     {'title': 'Problemas emocionais limitaram seu trabalho ou atividades?', 'field': 'limitacaoEmocional', 'options': ['Sim, limitaram muito (1)', 'Não, não limitaram (2)'], 'values': [1, 2]},
     {'title': 'Quanto tempo nas últimas 4 semanas você se sentiu calmo e tranquilo?', 'field': 'sentimentoCalmo', 'options': ['Nunca (1)', 'Raramente (2)', 'Às vezes (3)', 'Frequentemente (4)', 'Quase sempre (5)', 'Sempre (6)'], 'values': [1, 2, 3, 4, 5, 6]},
-    {'title': 'Quanta energia você teve nas últimas 4 semanas?', 'field': 'sentimentoBem', 'options': ['Nenhuma (1)', 'Muito pouca (2)', 'Pouca (3)', 'Alguma (4)', 'Bastante (5)', 'Muita (6)'], 'values': [1, 2, 3, 4, 5, 6]},
-    {'title': 'Quanto dor interferiu no seu trabalho normal (incluindo trabalho fora de casa)?', 'field': 'dorLimita', 'options': ['Nada (5)', 'Levemente (4)', 'Moderadamente (3)', 'Muito (2)', 'Extremamente (1)'], 'values': [5, 4, 3, 2, 1]},
+    {'title': 'Quanta energia você teve nas últimas 4 semanas? (Bem estar)', 'field': 'sentimentoBem', 'options': ['Nenhuma (1)', 'Muito pouca (2)', 'Pouca (3)', 'Alguma (4)', 'Bastante (5)', 'Muita (6)'], 'values': [1, 2, 3, 4, 5, 6]},
+    {'title': 'Quanto dor interferiu no seu trabalho normal?', 'field': 'dorLimita', 'options': ['Nada (5)', 'Levemente (4)', 'Moderadamente (3)', 'Muito (2)', 'Extremamente (1)'], 'values': [5, 4, 3, 2, 1]},
     {'title': 'Quanto tempo nas últimas 4 semanas você se sentiu deprimido?', 'field': 'saudeMental', 'options': ['Nunca (6)', 'Quase nunca (5)', 'Às vezes (4)', 'Frequentemente (3)', 'Muito frequentemente (2)', 'Sempre (1)'], 'values': [6, 5, 4, 3, 2, 1]},
   ];
 
@@ -110,85 +112,82 @@ class _SF12ScreenState extends State<SF12Screen> {
     }
   }
 
-  Widget _buildQuestionItem(int index, Map<String, dynamic> question, int value, ValueChanged<int> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('${index + 1}. ${question['title']}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            ...(question['options'] as List<String>).asMap().entries.map((entry) => RadioListTile<int>(
-              title: Text(entry.value, style: const TextStyle(fontSize: 12)),
-              value: (question['values'] as List<int>)[entry.key],
-              groupValue: value,
-              onChanged: (val) => onChanged(val ?? 1),
-              activeColor: Colors.lime.shade700,
-              dense: true,
-            )),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final score = _data.totalScore;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('SF-12'),
-        centerTitle: true,
-        backgroundColor: Colors.lime.shade700,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'SF-12 Health Survey\nAvaliação de qualidade de vida relacionada à saúde (12 itens)',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ...List.generate(_questions.length, (i) => _buildQuestionItem(i, _questions[i], _getValue(_questions[i]['field']), (v) => _setValue(_questions[i]['field'], v))),
-          const SizedBox(height: 16),
-          Card(
-            color: score >= 39 ? Colors.green : score >= 26 ? Colors.orange : Colors.red,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text('SF-12 Score', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('$score pontos', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                ],
-              ),
+    return CalculatorScaffold(
+      title: 'SF-12',
+      body: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Avaliação de qualidade de vida relacionada à saúde (12 itens).',
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: _salvarSF12,
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala SF-12'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+
+          ...List.generate(_questions.length, (i) => _buildQuestionItem(i, _questions[i], _getValue(_questions[i]['field'] as String), (v) => _setValue(_questions[i]['field'] as String, v))),
+
+          // Result Card
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _getScoreColor(score),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(score).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('SF-12 SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  '$score',
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                   decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                   child: Text(
+                    _data.interpretation,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.lime.shade700, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
-        ],
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarSF12,
+        backgroundColor: Colors.lime.shade700,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
-}
 
+  Widget _buildQuestionItem(int index, Map<String, dynamic> question, int value, ValueChanged<int> onChanged) {
+    final options = (question['options'] as List<String>).asMap().entries.map((entry) {
+        final val = (question['values'] as List<int>)[entry.key];
+        return QuestionOption<int>(label: entry.value, value: val);
+    }).toList();
+
+    return QuestionCard<int>(
+      title: '${index + 1}. ${question['title']}',
+      value: value,
+      onChanged: onChanged,
+      options: options,
+    );
+  }
+
+  Color _getScoreColor(int score) {
+    if (score >= 39) return Colors.green;
+    if (score >= 26) return Colors.orange;
+    return Colors.red;
+  }
+}

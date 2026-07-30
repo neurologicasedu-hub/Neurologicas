@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/abc_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
 
 class ABCScreen extends StatefulWidget {
   const ABCScreen({super.key});
@@ -70,31 +71,73 @@ class _ABCScreenState extends State<ABCScreen> {
   }
 
   Widget _buildSliderItem(String title, int value, ValueChanged<int> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(child: Text(title, style: const TextStyle(fontSize: 13))),
-                Text('$value%', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-              ],
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2D3748),
+                    height: 1.3,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.indigo.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '$value%',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.indigo,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: Colors.indigo,
+              inactiveTrackColor: Colors.indigo.withOpacity(0.1),
+              thumbColor: Colors.indigo,
+              overlayColor: Colors.indigo.withOpacity(0.1),
+              trackHeight: 6,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
             ),
-            Slider(
+            child: Slider(
               value: value.toDouble(),
               min: 0,
               max: 100,
               divisions: 100,
               onChanged: (val) => onChanged(val.toInt()),
-              activeColor: Colors.indigo,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -102,27 +145,18 @@ class _ABCScreenState extends State<ABCScreen> {
   @override
   Widget build(BuildContext context) {
     final pontuacao = _data.pontuacaoMedia;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('ABC Scale'),
-        centerTitle: true,
-        backgroundColor: Colors.indigo,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Activities-Specific Balance Confidence Scale',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
+    return CalculatorScaffold(
+      title: 'ABC Scale',
+      body: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Confiança no equilíbrio ao realizar atividades.\n(0% = sem confiança, 100% = totalmente confiante)',
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'Quanto você está confiante de que pode manter o equilíbrio e não cair ao realizar cada uma das seguintes atividades? (0% = sem confiança, 100% = totalmente confiante)',
-            style: TextStyle(fontSize: 12),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
+          
           _buildSliderItem('Andar pela casa', _data.andarCasa, (val) => setState(() => _data.andarCasa = val)),
           _buildSliderItem('Subir ou descer escadas', _data.subirDescerEscadas, (val) => setState(() => _data.subirDescerEscadas = val)),
           _buildSliderItem('Pegar um objeto no chão', _data.pegarObjetoChao, (val) => setState(() => _data.pegarObjetoChao = val)),
@@ -139,59 +173,47 @@ class _ABCScreenState extends State<ABCScreen> {
           _buildSliderItem('Entrar ou sair de um carro', _data.entrarSairCarro, (val) => setState(() => _data.entrarSairCarro = val)),
           _buildSliderItem('Tomar banho sem apoio', _data.tomarBanhoSemApoio, (val) => setState(() => _data.tomarBanhoSemApoio = val)),
           _buildSliderItem('Andar e conversar ao mesmo tempo', _data.andarConversar, (val) => setState(() => _data.andarConversar = val)),
-          const SizedBox(height: 16),
-          Card(
-            color: pontuacao >= 67 ? Colors.green : Colors.orange,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text(
-                    'Pontuação Média',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${pontuacao.toStringAsFixed(1)}%',
-                    style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
+          
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: pontuacao >= 67 ? Colors.green : Colors.orange,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: (pontuacao >= 67 ? Colors.green : Colors.orange).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  'MÉDIA TOTAL',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${pontuacao.toStringAsFixed(1)}%',
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                   decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                   child: Text(
                     _data.interpretacao,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
                     textAlign: TextAlign.center,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarABC();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala ABC'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.indigo,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-        ],
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarABC,
+        backgroundColor: Colors.indigo,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }

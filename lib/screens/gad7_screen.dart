@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/gad7_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class GAD7Screen extends StatefulWidget {
   const GAD7Screen({super.key});
@@ -22,8 +24,6 @@ class _GAD7ScreenState extends State<GAD7Screen> {
     'Ficar facilmente aborrecido(a) ou irritado(a)',
     'Sentir medo como se algo horrível fosse acontecer',
   ];
-
-  final List<String> _options = ['Nunca (0)', 'Vários dias (1)', 'Mais da metade dos dias (2)', 'Quase todos os dias (3)'];
 
   Future<void> _salvarGAD7() async {
     try {
@@ -67,49 +67,21 @@ class _GAD7ScreenState extends State<GAD7Screen> {
     }
   }
 
-  Widget _buildQuestionItem(int index, String question, int value, ValueChanged<int> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('${index + 1}. $question', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            ..._options.asMap().entries.map((entry) => RadioListTile<int>(
-              title: Text(entry.value, style: const TextStyle(fontSize: 12)),
-              value: entry.key,
-              groupValue: value,
-              onChanged: (val) => onChanged(val ?? 0),
-              activeColor: Colors.purple,
-              dense: true,
-            )),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final score = _data.totalScore;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('GAD-7'),
-        centerTitle: true,
-        backgroundColor: Colors.purple,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'GAD-7 - Generalized Anxiety Disorder-7\nNas últimas 2 semanas, com que frequência você foi incomodado(a) pelos seguintes problemas?',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
+    return CalculatorScaffold(
+      title: 'GAD-7',
+      body: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Nas últimas 2 semanas, com que frequência você foi incomodado(a) pelos seguintes problemas?',
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
           ),
-          const SizedBox(height: 16),
+
           _buildQuestionItem(0, _questions[0], _data.nervosismo, (v) => setState(() => _data.nervosismo = v)),
           _buildQuestionItem(1, _questions[1], _data.controlePreocupacao, (v) => setState(() => _data.controlePreocupacao = v)),
           _buildQuestionItem(2, _questions[2], _data.preocupacaoExcessiva, (v) => setState(() => _data.preocupacaoExcessiva = v)),
@@ -117,41 +89,71 @@ class _GAD7ScreenState extends State<GAD7Screen> {
           _buildQuestionItem(4, _questions[4], _data.inquietacao, (v) => setState(() => _data.inquietacao = v)),
           _buildQuestionItem(5, _questions[5], _data.irritabilidade, (v) => setState(() => _data.irritabilidade = v)),
           _buildQuestionItem(6, _questions[6], _data.medo, (v) => setState(() => _data.medo = v)),
-          const SizedBox(height: 16),
-          Card(
-            color: score <= 4 ? Colors.green : score <= 9 ? Colors.lightGreen : score <= 14 ? Colors.orange : Colors.red,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text('GAD-7 Score', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('$score/21', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                ],
-              ),
+
+          // Result Card
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _getScoreColor(score),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(score).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('GAD-7 SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  '$score',
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                const Text(
+                  '/ 21',
+                  style: TextStyle(fontSize: 18, color: Colors.white70),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                   decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                   child: Text(
+                    _data.interpretation,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: _salvarGAD7,
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala GAD-7'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.purple, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
-        ],
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarGAD7,
+        backgroundColor: Colors.purple,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
-}
 
+  Widget _buildQuestionItem(int index, String question, int value, ValueChanged<int> onChanged) {
+    return QuestionCard<int>(
+      title: '${index + 1}. $question',
+      value: value,
+      onChanged: onChanged,
+      options: const [
+        QuestionOption(label: 'Nenhuma vez (0)', value: 0),
+        QuestionOption(label: 'Vários dias (1)', value: 1),
+        QuestionOption(label: '> Metade dos dias (2)', value: 2),
+        QuestionOption(label: 'Quase todos os dias (3)', value: 3),
+      ],
+    );
+  }
+
+  Color _getScoreColor(int score) {
+    if (score <= 4) return Colors.green;
+    if (score <= 9) return Colors.lightGreen;
+    if (score <= 14) return Colors.orange;
+    return Colors.red;
+  }
+}

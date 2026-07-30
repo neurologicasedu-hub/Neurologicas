@@ -65,250 +65,246 @@ class NIHSSResultScreen extends StatelessWidget {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Card principal com resultado
-            Card(
-              elevation: 6,
-              color: _getScoreColor(totalScore),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    const Icon(
-                      Icons.assessment,
-                      size: 60,
+            // Score Result Card
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: _getScoreGradient(totalScore),
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: _getScoreColor(totalScore).withOpacity(0.4),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                   const Text(
+                    'PONTUAÇÃO TOTAL',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                       color: Colors.white,
+                      letterSpacing: 1.2,
                     ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Pontuação Total NIHSS',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '$totalScore',
+                    style: const TextStyle(
+                      fontSize: 64,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      height: 1.0,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '$totalScore',
-                      style: const TextStyle(
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    const SizedBox(height: 16),
-                    Text(
+                    child: Text(
                       interpretacao,
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             
-            // Alerta para Angio TC
+            // Angio TC Alert
             if (precisaAngioTC)
-              Card(
-                elevation: 4,
-                color: Colors.red.shade50,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.warning,
-                        color: Colors.red.shade700,
-                        size: 30,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Atenção!',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.red.shade700,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Paciente com pontuação superior a 5 pontos. Sugerido investigar obstrução de grandes vasos através de Angio TC.',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.red.shade700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            
-            const SizedBox(height: 20),
-            
-            // Detalhamento das respostas
-            Card(
-              elevation: 4,
-              child: Padding(
+              Container(
+                margin: const EdgeInsets.only(bottom: 24),
                 padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                child: Row(
                   children: [
-                    const Text(
-                      'Detalhamento das Respostas',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue,
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade100,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.warning_amber_rounded, color: Colors.orange.shade800),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Recomendação de Exame',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange.shade900,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Sugerido investigar obstrução de grandes vasos (Angio TC) devido à pontuação > 5.',
+                            style: TextStyle(fontSize: 14, color: Colors.orange.shade900),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    _buildDetailRow('1A. Nível de Consciência', nihssData.nivelConsciencia),
-                    _buildDetailRow('1B. Perguntar mês e idade', nihssData.perguntasConsciencia),
-                    _buildDetailRow('1C. Comandos', nihssData.comandosConsciencia),
-                    _buildDetailRow('2. Melhor olhar conjugado', nihssData.olharConjugado),
-                    _buildDetailRow('3. Campo Visual', nihssData.campoVisual),
-                    _buildDetailRow('4. Paralisia Facial', nihssData.paralisiaFacial),
-                    _buildDetailRow('5A. Motor para braço esquerdo', nihssData.motorBracoEsquerdo),
-                    _buildDetailRow('5B. Motor para braço direito', nihssData.motorBracoDireito),
-                    _buildDetailRow('6A. Motor para perna esquerda', nihssData.motorPernaEsquerda),
-                    _buildDetailRow('6B. Motor para perna direita', nihssData.motorPernaDireita),
-                    _buildDetailRow('7. Ataxia', nihssData.ataxia),
-                    _buildDetailRow('8. Sensibilidade', nihssData.sensibilidade),
-                    _buildDetailRow('9. Linguagem', nihssData.linguagem),
-                    _buildDetailRow('10. Disartria', nihssData.disartria),
-                    _buildDetailRow('11. Desatenção', nihssData.desatencao),
                   ],
                 ),
               ),
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // Informações do paciente
-            if (nihssData.pesoPaciente != null)
-              Card(
-                elevation: 4,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Informações do Paciente',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Peso: ${nihssData.pesoPaciente!.toStringAsFixed(1)} kg',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ],
+
+             // Patient Info
+             if (nihssData.pesoPaciente != null)
+               Container(
+                 margin: const EdgeInsets.only(bottom: 24),
+                 padding: const EdgeInsets.all(16),
+                 decoration: BoxDecoration(
+                   color: Colors.white,
+                   borderRadius: BorderRadius.circular(16),
+                   border: Border.all(color: Colors.grey.shade200),
+                   boxShadow: [
+                     BoxShadow(
+                       color: Colors.black.withOpacity(0.02),
+                       blurRadius: 10,
+                       offset: const Offset(0, 4),
+                     ),
+                   ],
+                 ),
+                 child: Row(
+                   children: [
+                     Icon(Icons.monitor_weight_outlined, color: Colors.blue.shade700),
+                     const SizedBox(width: 12),
+                     const Text('Peso do Paciente:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                     const SizedBox(width: 8),
+                     Text('${nihssData.pesoPaciente!.toStringAsFixed(1)} kg', style: const TextStyle(fontSize: 16)),
+                   ],
+                 ),
+               ),
+
+            // Detailed Results
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 8, bottom: 12),
+                  child: Text(
+                    'DETALHAMENTO',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade600,
+                      letterSpacing: 1.0,
+                    ),
                   ),
                 ),
-              ),
+                _buildDetailRow('1A. Nível de Consciência', nihssData.nivelConsciencia),
+                _buildDetailRow('1B. Perguntas', nihssData.perguntasConsciencia),
+                _buildDetailRow('1C. Comandos', nihssData.comandosConsciencia),
+                _buildDetailRow('2. Olhar Conjugado', nihssData.olharConjugado),
+                _buildDetailRow('3. Campo Visual', nihssData.campoVisual),
+                _buildDetailRow('4. Paralisia Facial', nihssData.paralisiaFacial),
+                _buildDetailRow('5A. Braço Esquerdo', nihssData.motorBracoEsquerdo),
+                _buildDetailRow('5B. Braço Direito', nihssData.motorBracoDireito),
+                _buildDetailRow('6A. Perna Esquerda', nihssData.motorPernaEsquerda),
+                _buildDetailRow('6B. Perna Direita', nihssData.motorPernaDireita),
+                _buildDetailRow('7. Ataxia', nihssData.ataxia),
+                _buildDetailRow('8. Sensibilidade', nihssData.sensibilidade),
+                _buildDetailRow('9. Linguagem', nihssData.linguagem),
+                _buildDetailRow('10. Disartria', nihssData.disartria),
+                _buildDetailRow('11. Desatenção', nihssData.desatencao),
+              ],
+            ),
             
-            const SizedBox(height: 20),
+            const SizedBox(height: 32),
             
-            // Botão para salvar escala
+            // Action Buttons
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () async {
                   await _salvarNIHSS(context);
                 },
-                icon: const Icon(Icons.save),
-                label: const Text('Salvar Escala NIHSS'),
+                icon: const Icon(Icons.save_outlined),
+                label: const Text('SALVAR NO HISTÓRICO'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: Colors.green.shade600,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 2,
                 ),
               ),
             ),
-            
             const SizedBox(height: 12),
-            
-            // Botão para prosseguir para critérios de exclusão
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => TromboliseScreen(
-                      nihssScore: nihssData.totalScore,
-                      pesoPaciente: nihssData.pesoPaciente,
-                      interpretacaoNIHSS: nihssData.interpretacaoClinica,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TromboliseScreen(
+                        nihssScore: nihssData.totalScore,
+                        pesoPaciente: nihssData.pesoPaciente,
+                        interpretacaoNIHSS: nihssData.interpretacaoClinica,
+                      ),
                     ),
-                  ),
-                );
-              },
-                icon: const Icon(Icons.arrow_forward),
-                label: const Text('Prosseguir para Critérios de Exclusão'),
+                  );
+                },
+                icon: const Icon(Icons.bolt),
+                label: const Text('AVALIAR TROMBÓLISE'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor: const Color(0xFF00509D),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 4,
                 ),
               ),
             ),
-            
             const SizedBox(height: 16),
-            
-            // Botões de ação
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
+                  child: OutlinedButton.icon(
+                    onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.edit),
                     label: const Text('Editar'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
+                    style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.popUntil(context, (route) => route.isFirst);
-                    },
+                  child: OutlinedButton.icon(
+                    onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
                     icon: const Icon(Icons.home),
                     label: const Text('Início'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
+                    style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -316,35 +312,52 @@ class NIHSSResultScreen extends StatelessWidget {
   }
 
   Widget _buildDetailRow(String label, int value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(fontSize: 14),
+              style: const TextStyle(fontSize: 15, color: Colors.black87),
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.blue.shade100,
-              borderRadius: BorderRadius.circular(12),
+              color: value > 0 ? Colors.red.shade50 : Colors.green.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: value > 0 ? Colors.red.shade100 : Colors.green.shade100,
+              ),
             ),
             child: Text(
-              '$value',
-              style: const TextStyle(
+              '+$value',
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: Colors.blue,
+                color: value > 0 ? Colors.red.shade700 : Colors.green.shade700,
               ),
             ),
           ),
         ],
       ),
     );
+  }
+  
+  List<Color> _getScoreGradient(int score) {
+     if (score == 0) return [Colors.green.shade400, Colors.green.shade700];
+     if (score <= 4) return [Colors.lightGreen.shade400, Colors.lightGreen.shade700];
+     if (score <= 15) return [Colors.orange.shade400, Colors.orange.shade700];
+     if (score <= 20) return [Colors.deepOrange.shade400, Colors.deepOrange.shade700];
+     return [Colors.red.shade400, Colors.red.shade700];
   }
 
   Color _getScoreColor(int score) {

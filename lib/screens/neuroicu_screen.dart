@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/neuroicu_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
 
 class NeuroICUScreen extends StatefulWidget {
   const NeuroICUScreen({super.key});
@@ -12,6 +13,26 @@ class NeuroICUScreen extends StatefulWidget {
 
 class _NeuroICUScreenState extends State<NeuroICUScreen> {
   final NeuroICUData _data = NeuroICUData();
+  
+  final TextEditingController _gcsController = TextEditingController(text: '15');
+  final TextEditingController _icpController = TextEditingController(text: '10');
+  final TextEditingController _ppcController = TextEditingController(text: '70');
+
+  @override
+  void dispose() {
+    _gcsController.dispose();
+    _icpController.dispose();
+    _ppcController.dispose();
+    super.dispose();
+  }
+
+  void _updateData() {
+    setState(() {
+      _data.glasgowComaScale = int.tryParse(_gcsController.text) ?? 15;
+      _data.pressaoIntracraniana = double.tryParse(_icpController.text) ?? 10;
+      _data.pressaoPerfusaoCerebral = double.tryParse(_ppcController.text) ?? 70;
+    });
+  }
 
   Future<void> _salvarNeuroICU() async {
     try {
@@ -44,179 +65,119 @@ class _NeuroICUScreenState extends State<NeuroICUScreen> {
             action: SnackBarAction(
               label: 'Ver Relatório',
               textColor: Colors.white,
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/report');
-              },
+              onPressed: () => Navigator.pushReplacementNamed(context, '/report'),
             ),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao salvar: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red));
       }
     }
   }
-  final TextEditingController _gcsController = TextEditingController(text: '15');
-  final TextEditingController _icpController = TextEditingController(text: '10');
-  final TextEditingController _ppcController = TextEditingController(text: '70');
 
-  @override
-  void dispose() {
-    _gcsController.dispose();
-    _icpController.dispose();
-    _ppcController.dispose();
-    super.dispose();
+  Widget _buildSwitch(String title, bool value, ValueChanged<bool> onChanged) {
+    return SwitchListTile(
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+      value: value,
+      onChanged: (val) {
+        onChanged(val);
+        _updateData();
+      },
+      activeColor: Colors.purple,
+    );
   }
 
-  void _updateData() {
-    setState(() {
-      _data.glasgowComaScale = int.tryParse(_gcsController.text) ?? 15;
-      _data.pressaoIntracraniana = double.tryParse(_icpController.text) ?? 10;
-      _data.pressaoPerfusaoCerebral = double.tryParse(_ppcController.text) ?? 70;
-    });
+  Widget _buildInput(String label, TextEditingController controller) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: TextField(
+        controller: controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        ),
+        onChanged: (_) => _updateData(),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final classificacao = _data.classificacaoGeral;
-    final recomendacoes = _data.recomendacoes;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Neurointensivismo / UTI'),
-        centerTitle: true,
-        backgroundColor: Colors.blue,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Monitorização e Condutas em UTI Neuro',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _gcsController,
-            decoration: const InputDecoration(
-              labelText: 'Glasgow Coma Scale',
-              hintText: 'Ex: 15',
-              border: OutlineInputBorder(),
+    return CalculatorScaffold(
+      title: 'Neurointensivismo',
+      body: [
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Monitorização e Condutas em UTI Neuro',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+              textAlign: TextAlign.center,
             ),
-            keyboardType: TextInputType.number,
-            onChanged: (_) => _updateData(),
           ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _icpController,
-            decoration: const InputDecoration(
-              labelText: 'Pressão Intracraniana (ICP) - mmHg',
-              hintText: 'Ex: 15',
-              border: OutlineInputBorder(),
-            ),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            onChanged: (_) => _updateData(),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _ppcController,
-            decoration: const InputDecoration(
-              labelText: 'Pressão de Perfusão Cerebral (PPC) - mmHg',
-              hintText: 'Ex: 70',
-              border: OutlineInputBorder(),
-            ),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            onChanged: (_) => _updateData(),
-          ),
-          const SizedBox(height: 12),
-          _buildCheckboxItem('Sedação', _data.sedacao, (val) => setState(() => _data.sedacao = val)),
-          _buildCheckboxItem('Ventilação Mecânica', _data.ventilacaoMecanica, (val) => setState(() => _data.ventilacaoMecanica = val)),
-          _buildCheckboxItem('Monitoramento ICP', _data.monitoramentoICP, (val) => setState(() => _data.monitoramentoICP = val)),
-          _buildCheckboxItem('Monitoramento PPC', _data.monitoramentoPPC, (val) => setState(() => _data.monitoramentoPPC = val)),
-          _buildCheckboxItem('Uso de Manitol', _data.usoManitol, (val) => setState(() => _data.usoManitol = val)),
-          _buildCheckboxItem('Uso de Solução Hipertônica', _data.usoHipertonico, (val) => setState(() => _data.usoHipertonico = val)),
-          _buildCheckboxItem('Uso de Barbitúricos', _data.usoBarbituricos, (val) => setState(() => _data.usoBarbituricos = val)),
-          const SizedBox(height: 16),
+          
           Card(
-            color: _getClassificacaoColor(classificacao),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text('Classificação', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(classificacao, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Card(
-            color: Colors.blueGrey.shade700,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Recomendações', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text(recomendacoes, style: const TextStyle(fontSize: 13, color: Colors.white), textAlign: TextAlign.left),
+                   const Text('Parâmetros Clínicos', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                   const SizedBox(height: 16),
+                   _buildInput('GCS (Glasgow)', _gcsController),
+                   _buildInput('PIC (mmHg)', _icpController),
+                   _buildInput('PPC (mmHg)', _ppcController),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarNeuroICU();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala Neurointensivismo'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+
+          const SizedBox(height: 16),
+          
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Column(
+              children: [
+                _buildSwitch('Sedação', _data.sedacao, (v) => setState(() => _data.sedacao = v)),
+                _buildSwitch('Ventilação Mecânica', _data.ventilacaoMecanica, (v) => setState(() => _data.ventilacaoMecanica = v)),
+                _buildSwitch('Monitoramento PIC Invasivo', _data.monitoramentoICP, (v) => setState(() => _data.monitoramentoICP = v)),
+                _buildSwitch('Monitoramento PPC', _data.monitoramentoPPC, (v) => setState(() => _data.monitoramentoPPC = v)),
+                _buildSwitch('Uso de Manitol', _data.usoManitol, (v) => setState(() => _data.usoManitol = v)),
+                _buildSwitch('Salina Hipertônica', _data.usoHipertonico, (v) => setState(() => _data.usoHipertonico = v)),
+                _buildSwitch('Barbitúricos (Coma Induzido)', _data.usoBarbituricos, (v) => setState(() => _data.usoBarbituricos = v)),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.purple.shade50,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.purple.shade200),
+            ),
+            child: Column(
+              children: [
+                const Text('RECOMENDAÇÕES', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.purple)),
+                const SizedBox(height: 12),
+                Text(_data.classificacaoGeral, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                const SizedBox(height: 8),
+                Text(_data.recomendacoes, style: TextStyle(fontSize: 13, color: Colors.grey.shade800), textAlign: TextAlign.center),
+              ],
+            ),
           ),
-        ],
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarNeuroICU,
+        backgroundColor: Colors.purple,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
-  }
-
-  Widget _buildCheckboxItem(String title, bool value, ValueChanged<bool> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: CheckboxListTile(
-        title: Text(title, style: const TextStyle(fontSize: 14)),
-        value: value,
-        onChanged: (val) => onChanged(val ?? false),
-        activeColor: Colors.blue,
-      ),
-    );
-  }
-
-  Color _getClassificacaoColor(String classificacao) {
-    if (classificacao.contains('estável')) return Colors.green;
-    if (classificacao.contains('crítico')) return Colors.red;
-    return Colors.orange;
   }
 }
-

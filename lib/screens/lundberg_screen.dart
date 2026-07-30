@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/lundberg_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class LundbergScreen extends StatefulWidget {
   const LundbergScreen({super.key});
@@ -63,113 +65,88 @@ class _LundbergScreenState extends State<LundbergScreen> {
     final interpretacao = _data.interpretacao;
     final conduta = _data.condutaRecomendada;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Lundberg Waves (ICP)'),
-        centerTitle: true,
-        backgroundColor: Colors.teal,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Ondas de Lundberg - Padrões de ICP',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          _buildRadioItem('Tipo de Onda', [
-            'Normal',
-            'Ondas C',
-            'Ondas B',
-            'Ondas A'
-          ], ['normal', 'C', 'B', 'A'], _data.tipoOnda, (val) => setState(() => _data.tipoOnda = val)),
-          const SizedBox(height: 16),
-          Card(
-            color: _getScoreColor(_data.tipoOnda),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Text(_data.tipoOnda.toUpperCase(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(descricao, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                  const SizedBox(height: 12),
-                  Text(interpretacao, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white), textAlign: TextAlign.center),
-                ],
-              ),
+    return CalculatorScaffold(
+      title: 'Lundberg Waves',
+      body: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Padrões de ondas de Pressão Intracraniana (ICP).',
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 12),
-          Card(
-            color: Colors.blueGrey.shade700,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Conduta Recomendada', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text(conduta, style: const TextStyle(fontSize: 13, color: Colors.white), textAlign: TextAlign.left),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarLundberg();
+          
+          QuestionCard<String>(
+            title: 'Tipo de Onda Identificado',
+            value: _data.tipoOnda, // This needs to match the value types in options
+            onChanged: (v) {
+              setState(() => _data.tipoOnda = v);
+              // LundbergData handles updates internally or just getters?
+              // The original code reset data fields based on setters or just used type to get description.
+              // Assuming setters work or getters are computed from typeOnda.
             },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala Lundberg'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+            options: const [
+              QuestionOption(label: 'Normal', value: 'normal'),
+              QuestionOption(label: 'Ondas C (Variações Traube-Hering)', value: 'C'),
+              QuestionOption(label: 'Ondas B (Oscilações rítmicas)', value: 'B'),
+              QuestionOption(label: 'Ondas A (Plateau Waves)', value: 'A'),
+            ],
+          ),
+
+          // Display info about the wave
+          Container(
+             margin: const EdgeInsets.symmetric(vertical: 16),
+             padding: const EdgeInsets.all(16),
+             decoration: BoxDecoration(
+               color: Colors.white,
+               borderRadius: BorderRadius.circular(16),
+               border: Border.all(color: Colors.grey.shade200),
+               boxShadow: [
+                 BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+               ],
+             ),
+             child: Column(
+               crossAxisAlignment: CrossAxisAlignment.start,
+               children: [
+                 Text('Descrição: $descricao', style: const TextStyle(fontSize: 14, color: Colors.black87)),
+                 const SizedBox(height: 8),
+                 Text('Interpretação: $interpretacao', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _getScoreColor(_data.tipoOnda))),
+               ],
+             ),
+           ),
+
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _getScoreColor(_data.tipoOnda),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(_data.tipoOnda).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('CONDUTA', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 12),
+                 Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                   decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+                   child: Text(
+                      conduta,
+                      style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w500),
+                      textAlign: TextAlign.center,
+                    ),
+                 ),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRadioItem(String title, List<String> labels, List<String> values, String selected, ValueChanged<String> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            ...labels.asMap().entries.map((entry) {
-              int index = entry.key;
-              String label = entry.value;
-              String value = values[index];
-              return RadioListTile<String>(
-                title: Text(label, style: const TextStyle(fontSize: 13)),
-                value: value,
-                groupValue: selected,
-                onChanged: (val) => onChanged(val ?? 'normal'),
-                activeColor: Colors.teal,
-                dense: true,
-              );
-            }),
-          ],
-        ),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarLundberg,
+        backgroundColor: Colors.teal,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -188,4 +165,3 @@ class _LundbergScreenState extends State<LundbergScreen> {
     }
   }
 }
-

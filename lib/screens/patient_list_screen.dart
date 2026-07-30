@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/patient_data.dart';
 import '../services/patient_service.dart';
 import '../services/auth_service.dart';
+import 'final_report_screen.dart';
 
 class PatientListScreen extends StatefulWidget {
   const PatientListScreen({super.key});
@@ -13,6 +14,7 @@ class PatientListScreen extends StatefulWidget {
 class _PatientListScreenState extends State<PatientListScreen> {
   List<PatientData> _patients = [];
   bool _isLoading = true;
+  PatientData? _activePatient;
 
   @override
   void initState() {
@@ -23,8 +25,11 @@ class _PatientListScreenState extends State<PatientListScreen> {
   Future<void> _loadPatients() async {
     setState(() => _isLoading = true);
     final patients = await PatientService.getPatients();
+    final active = await PatientService.loadPatientData();
+
     setState(() {
       _patients = patients;
+      _activePatient = active;
       _isLoading = false;
     });
   }
@@ -33,6 +38,15 @@ class _PatientListScreenState extends State<PatientListScreen> {
     await PatientService.setActivePatient(patient);
     if (!mounted) return;
     Navigator.pushNamed(context, '/home');
+  }
+
+  void _viewReport(PatientData patient) async {
+    await PatientService.setActivePatient(patient);
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const FinalReportScreen()),
+    ).then((_) => _loadPatients());
   }
 
   Future<void> _deletePatient(PatientData patient) async {
@@ -61,7 +75,6 @@ class _PatientListScreenState extends State<PatientListScreen> {
   }
 
   void _addNewPatient() {
-    // Limpa o paciente ativo para indicar que é um novo cadastro
     PatientService.clearActivePatient();
     Navigator.pushNamed(context, '/patient').then((_) => _loadPatients());
   }
@@ -71,8 +84,6 @@ class _PatientListScreenState extends State<PatientListScreen> {
     if (!mounted) return;
     Navigator.pushNamed(context, '/patient').then((_) => _loadPatients());
   }
-
-
 
   Future<void> _handleLogout() async {
     final shouldLogout = await showDialog<bool>(
@@ -95,7 +106,6 @@ class _PatientListScreenState extends State<PatientListScreen> {
 
     if (shouldLogout == true) {
       await AuthService().signOut();
-      // AuthWrapper cuidará do redirecionamento
     }
   }
 
@@ -105,6 +115,8 @@ class _PatientListScreenState extends State<PatientListScreen> {
       appBar: AppBar(
         title: const Text('Pacientes'),
         centerTitle: true,
+        backgroundColor: const Color(0xFF00509D), 
+        foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -131,6 +143,10 @@ class _PatientListScreenState extends State<PatientListScreen> {
                         onPressed: _addNewPatient,
                         icon: const Icon(Icons.add),
                         label: const Text('Adicionar Paciente'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF00509D),
+                          foregroundColor: Colors.white,
+                        ),
                       ),
                     ],
                   ),
@@ -140,11 +156,16 @@ class _PatientListScreenState extends State<PatientListScreen> {
                   itemCount: _patients.length,
                   itemBuilder: (context, index) {
                     final patient = _patients[index];
+                    final isActive = _activePatient?.id == patient.id;
+
                     return Card(
-                      elevation: 2,
+                      elevation: isActive ? 4 : 2,
                       margin: const EdgeInsets.only(bottom: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
+                        side: isActive 
+                            ? const BorderSide(color: Color(0xFF00A896), width: 2) 
+                            : BorderSide.none,
                       ),
                       child: InkWell(
                         onTap: () => _selectPatient(patient),
@@ -153,29 +174,62 @@ class _PatientListScreenState extends State<PatientListScreen> {
                           padding: const EdgeInsets.all(16),
                           child: Row(
                             children: [
-                              CircleAvatar(
-                                backgroundColor: Colors.blue.shade100,
-                                child: Text(
-                                  patient.nome?.isNotEmpty == true
-                                      ? patient.nome![0].toUpperCase()
-                                      : '?',
-                                  style: TextStyle(
-                                    color: Colors.blue.shade700,
-                                    fontWeight: FontWeight.bold,
+                               Stack(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: isActive ? const Color(0xFF00A896).withOpacity(0.2) : Colors.blue.shade100,
+                                    radius: 24,
+                                    child: Text(
+                                      patient.nome?.isNotEmpty == true
+                                          ? patient.nome![0].toUpperCase()
+                                          : '?',
+                                      style: TextStyle(
+                                        color: isActive ? const Color(0xFF00A896) : Colors.blue.shade700,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                  if (isActive)
+                                    const Positioned(
+                                      right: 0,
+                                      bottom: 0,
+                                      child: CircleAvatar(
+                                        backgroundColor: Color(0xFF00A896),
+                                        radius: 8,
+                                        child: Icon(Icons.check, size: 12, color: Colors.white),
+                                      ),
+                                    ),
+                                ],
                               ),
                               const SizedBox(width: 16),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      patient.nome ?? 'Sem Nome',
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            patient.nome ?? 'Sem Nome',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                              color: isActive ? const Color(0xFF00509D) : Colors.black87,
+                                            ),
+                                          ),
+                                        ),
+                                        if (isActive)
+                                          Container(
+                                            margin: const EdgeInsets.only(left: 8),
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF00A896),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: const Text('ATIVO', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                          ),
+                                      ],
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
@@ -191,13 +245,25 @@ class _PatientListScreenState extends State<PatientListScreen> {
                               PopupMenuButton<String>(
                                 icon: const Icon(Icons.more_vert),
                                 onSelected: (value) {
-                                  if (value == 'edit') {
+                                  if (value == 'report') {
+                                    _viewReport(patient);
+                                  } else if (value == 'edit') {
                                     _editPatient(patient);
                                   } else if (value == 'delete') {
                                     _deletePatient(patient);
                                   }
                                 },
                                 itemBuilder: (context) => [
+                                  const PopupMenuItem(
+                                    value: 'report',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.assignment, size: 20),
+                                        SizedBox(width: 8),
+                                        Text('Relatório'),
+                                      ],
+                                    ),
+                                  ),
                                   const PopupMenuItem(
                                     value: 'edit',
                                     child: Row(
@@ -230,6 +296,8 @@ class _PatientListScreenState extends State<PatientListScreen> {
       floatingActionButton: _patients.isNotEmpty
           ? FloatingActionButton(
               onPressed: _addNewPatient,
+               backgroundColor: const Color(0xFF00A896),
+               foregroundColor: Colors.white,
               child: const Icon(Icons.add),
             )
           : null,

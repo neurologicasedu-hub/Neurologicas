@@ -3,6 +3,8 @@ import '../models/fisher_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
 import '../helpers/auto_save_mixin.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class FisherScreen extends StatefulWidget {
   const FisherScreen({super.key});
@@ -78,89 +80,66 @@ class _FisherScreenState extends State<FisherScreen> with AutoSaveMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Fisher Scale'),
-        centerTitle: true,
-        backgroundColor: Colors.amber,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Classificação de Hemorragia Subaracnóidea em TC',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          ...List.generate(4, (index) {
-            int grau = index + 1;
-            final tempData = FisherData(grau: grau);
-            return _buildRadioItem(
-              'Grau $grau',
-              tempData.descricao,
-              grau == _data.grau,
-              () {
-                setState(() => _data.grau = grau);
-                onDataChanged();
-              },
-            );
-          }),
-          const SizedBox(height: 16),
-          Card(
-            color: _getScoreColor(_data.grau),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Text('Grau ${_data.grau}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(_data.interpretacao, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                  const SizedBox(height: 8),
-                  Text('Risco de Vasoespasmo: ${_data.riscoVasoespasmo}', style: const TextStyle(fontSize: 13, color: Colors.white70), textAlign: TextAlign.center),
-                ],
-              ),
+    return CalculatorScaffold(
+      title: 'Fisher Scale',
+      body: [
+         Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Classificação de Hemorragia Subaracnóidea em TC',
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarFisher();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala Fisher'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber.shade700, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildRadioItem(String title, String description, bool selected, VoidCallback onTap) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: selected ? 4 : 1,
-      color: selected ? Colors.amber.shade50 : null,
-      child: RadioListTile<int>(
-        title: Text(title, style: TextStyle(fontSize: 14, fontWeight: selected ? FontWeight.bold : FontWeight.normal)),
-        subtitle: Text(description, style: const TextStyle(fontSize: 12)),
-        value: 1,
-        groupValue: selected ? 1 : null,
-        onChanged: (_) => onTap(),
-        activeColor: Colors.amber.shade700,
+          QuestionCard<int>(
+            title: 'Achados na Tomografia',
+            value: _data.grau,
+            onChanged: (v) => setState(() {
+              _data.grau = v;
+              onDataChanged();
+            }),
+            options: [
+              QuestionOption(label: 'Grau 1: Sem sangue detectado', value: 1),
+              QuestionOption(label: 'Grau 2: Sangue difuso fino (<1mm)', value: 2),
+              QuestionOption(label: 'Grau 3: Coágulo localizado ou sangue espesso (>1mm)', value: 3),
+              QuestionOption(label: 'Grau 4: Hemorragia intraventricular ou intraparenquimatosa', value: 4),
+            ],
+          ),
+
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _getScoreColor(_data.grau),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(_data.grau).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('FISHER GRADE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  '${_data.grau}',
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                 const SizedBox(height: 12),
+                 Text(
+                  'Risco de Vasoespasmo: ${_data.riscoVasoespasmo}',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarFisher,
+        backgroundColor: Colors.amber.shade700,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -170,4 +149,3 @@ class _FisherScreenState extends State<FisherScreen> with AutoSaveMixin {
     return Colors.orange;
   }
 }
-

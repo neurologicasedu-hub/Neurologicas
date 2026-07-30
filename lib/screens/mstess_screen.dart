@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/mstess_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
 
 class MSTESSScreen extends StatefulWidget {
   const MSTESSScreen({super.key});
@@ -60,63 +61,101 @@ class _MSTESSScreenState extends State<MSTESSScreen> {
   @override
   Widget build(BuildContext context) {
     final score = _data.totalScore;
-    return Scaffold(
-      appBar: AppBar(title: const Text('Modified STESS (mSTESS)'), centerTitle: true, backgroundColor: Colors.purpleAccent),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text('Modified Status Epilepticus Severity Score', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-          const SizedBox(height: 12),
-          _buildRadioItem('Idade', ['<40 (0)', '40-59 (1)', '≥60 (2)'], _data.idade, (val) => setState(() => _data.idade = val)),
-          _buildRadioItem('História de Epilepsia', ['Não (0)', 'Sim (1)'], _data.historiaEpilepsia, (val) => setState(() => _data.historiaEpilepsia = val)),
-          _buildRadioItem('Tipo SE', ['Focal (0)', 'Generalizado (1)', 'Convulsivo (2)', 'Refratário (3)'], _data.tipoSE, (val) => setState(() => _data.tipoSE = val)),
-          _buildRadioItem('Nível Consciência', ['Normal/Confuso (0)', 'Estupor/Coma (1)'], _data.nivelConsciencia, (val) => setState(() => _data.nivelConsciencia = val)),
-          _buildRadioItem('Hora Início', ['≤1h (0)', '>1h (1)'], _data.horaInicio, (val) => setState(() => _data.horaInicio = val)),
-          const SizedBox(height: 16),
-          Card(color: _getScoreColor(score), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 6, child: Padding(padding: const EdgeInsets.all(20), child: Column(children: [const Text('mSTESS Score', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)), const SizedBox(height: 8), Text('$score', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)), const SizedBox(height: 12), Text(_data.interpretacao, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center)]))),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarMSTESS();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala mSTESS'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+
+    return CalculatorScaffold(
+      title: 'mSTESS',
+      body: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Modified Status Epilepticus Severity Score',
+              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+              textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.arrow_back), label: const Text('Voltar'), style: ElevatedButton.styleFrom(backgroundColor: Colors.purpleAccent, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12))),
-        ],
+          
+          _buildSelectionItem('Idade', ['<40 anos (0)', '40-59 anos (1)', '≥60 anos (2)'], _data.idade, (val) => setState(() => _data.idade = val)),
+          _buildSelectionItem('História de Epilepsia', ['Não (0)', 'Sim (1)'], _data.historiaEpilepsia, (val) => setState(() => _data.historiaEpilepsia = val)),
+          _buildSelectionItem('Tipo de SE', ['Focal Simpl/Compl (0)', 'Generalizado (1)', 'Convulsivo (2)', 'Refratário (3)'], _data.tipoSE, (val) => setState(() => _data.tipoSE = val)),
+          _buildSelectionItem('Nível de Consciência', ['Alerta/Confuso (0)', 'Estupor/Coma (1)'], _data.nivelConsciencia, (val) => setState(() => _data.nivelConsciencia = val)),
+          _buildSelectionItem('Tempo de Início', ['≤1 hora (0)', '>1 hora (1)'], _data.horaInicio, (val) => setState(() => _data.horaInicio = val)),
+
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _getScoreColor(score),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(score).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('mSTESS SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  '$score',
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                 const SizedBox(height: 12),
+                 Text(
+                  _data.interpretacao,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarMSTESS,
+        backgroundColor: Colors.purpleAccent.shade700,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
 
-  Widget _buildRadioItem(String title, List<String> options, int value, ValueChanged<int> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            ...options.asMap().entries.map((entry) {
-              return RadioListTile<int>(
-                title: Text(entry.value, style: const TextStyle(fontSize: 13)),
-                value: entry.key,
-                groupValue: value,
-                onChanged: (val) => onChanged(val ?? 0),
-                activeColor: Colors.purpleAccent,
-                dense: true,
-              );
-            }),
-          ],
-        ),
+  Widget _buildSelectionItem(String title, List<String> options, int selectedIndex, ValueChanged<int> onChanged) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.purpleAccent.shade700)),
+          ),
+          ...List.generate(options.length, (index) {
+             final isSelected = selectedIndex == index;
+             return InkWell(
+               onTap: () => onChanged(index),
+               child: Container(
+                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                 color: isSelected ? Colors.purple.shade50 : null,
+                 child: Row(
+                   children: [
+                     Icon(
+                       isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
+                       color: isSelected ? Colors.purpleAccent.shade700 : Colors.grey,
+                     ),
+                     const SizedBox(width: 12),
+                     Expanded(child: Text(options[index], style: TextStyle(
+                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                       color: isSelected ? Colors.purple.shade900 : Colors.black87,
+                     ))),
+                   ],
+                 ),
+               ),
+             );
+          }),
+        ],
       ),
     );
   }
@@ -127,4 +166,3 @@ class _MSTESSScreenState extends State<MSTESSScreen> {
     return Colors.red;
   }
 }
-

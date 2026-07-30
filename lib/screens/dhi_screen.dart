@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/dhi_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class DHIScreen extends StatefulWidget {
   const DHIScreen({super.key});
@@ -12,6 +14,42 @@ class DHIScreen extends StatefulWidget {
 
 class _DHIScreenState extends State<DHIScreen> {
   final DHIData _data = DHIData();
+
+  final List<String> _options = ['Não (0)', 'Às vezes (2)', 'Sim (4)'];
+  final List<int> _values = [0, 2, 4];
+
+  // Helper method to set value
+  void _setVal(String field, int val) {
+    setState(() {
+       switch(field) {
+         case 'caminhar': _data.dificuldadeCaminhar = val; break;
+         case 'fisicas': _data.dificuldadeAtividadesFisicas = val; break;
+         case 'trabalho': _data.dificuldadeTrabalho = val; break;
+         case 'leitura': _data.dificuldadeLeitura = val; break;
+         case 'domesticas': _data.dificuldadeTarefasDomesticas = val; break;
+         case 'recreacao': _data.dificuldadeRecreacao = val; break;
+         case 'viagens': _data.dificuldadeViagens = val; break;
+         case 'alimentacao': _data.dificuldadeAlimentacao = val; break;
+         case 'transporte': _data.dificuldadeTransporte = val; break;
+         case 'ansioso': _data.deixarAnsioso = val; break;
+         case 'frustrado': _data.deixarFrustrado = val; break;
+         case 'irritado': _data.deixarIrritado = val; break;
+         case 'embaracado': _data.deixarEmbaracado = val; break;
+         case 'deprimido': _data.deixarDeprimido = val; break;
+         case 'autoconfianca': _data.afetarAutoconfianca = val; break;
+         case 'relacionamentos': _data.afetarRelacionamentos = val; break;
+         case 'medoQueda': _data.medoQueda = val; break;
+         case 'saude': _data.preocupacaoSaude = val; break;
+         case 'virarCabeca': _data.pioraVirarCabeca = val; break;
+         case 'olharCima': _data.pioraOlharCima = val; break;
+         case 'levantar': _data.pioraLevantarRapido = val; break;
+         case 'virarCama': _data.pioraVirarNaCama = val; break;
+         case 'curvar': _data.pioraAoCurvar = val; break;
+         case 'pioraCaminhar': _data.pioraAoCaminhar = val; break;
+         case 'exercitar': _data.pioraAoExercitar = val; break;
+       }
+    });
+  }
 
   Future<void> _salvarDHI() async {
     try {
@@ -44,7 +82,7 @@ class _DHIScreenState extends State<DHIScreen> {
           'pioraAoCaminhar': _data.pioraAoCaminhar,
           'pioraAoExercitar': _data.pioraAoExercitar,
         },
-        resultado: 'Funcional: ${_data.scoreFuncional} | Emocional: ${_data.scoreEmocional} | Físico: ${_data.scoreFisico} - ${_data.interpretacao}',
+        resultado: 'Total: ${_data.totalScore} - ${_data.interpretacao}',
         totalScore: _data.totalScore,
       );
       
@@ -59,190 +97,111 @@ class _DHIScreenState extends State<DHIScreen> {
             action: SnackBarAction(
               label: 'Ver Relatório',
               textColor: Colors.white,
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/report');
-              },
+              onPressed: () => Navigator.pushReplacementNamed(context, '/report'),
             ),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao salvar: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red));
       }
     }
   }
 
-  Widget _buildRadioItem(String title, int value, ValueChanged<int> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            RadioListTile<int>(
-              title: const Text('Sim (4 pontos)', style: TextStyle(fontSize: 12)),
-              value: 4,
-              groupValue: value,
-              onChanged: (val) => onChanged(val ?? 0),
-              activeColor: Colors.purple,
-              dense: true,
-            ),
-            RadioListTile<int>(
-              title: const Text('Às vezes (2 pontos)', style: TextStyle(fontSize: 12)),
-              value: 2,
-              groupValue: value,
-              onChanged: (val) => onChanged(val ?? 0),
-              activeColor: Colors.purple,
-              dense: true,
-            ),
-            RadioListTile<int>(
-              title: const Text('Não (0 pontos)', style: TextStyle(fontSize: 12)),
-              value: 0,
-              groupValue: value,
-              onChanged: (val) => onChanged(val ?? 0),
-              activeColor: Colors.purple,
-              dense: true,
-            ),
-          ],
-        ),
-      ),
+  Widget _buildQ(String title, int val, String key) {
+    final currentLabel = _options[_values.indexOf(val)];
+    return QuestionCard<String>(
+       title: title,
+       options: _options.map((e) => QuestionOption(label: e, value: e)).toList(),
+       value: currentLabel,
+       onChanged: (v) => _setVal(key, _values[_options.indexOf(v)]),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final scoreTotal = _data.totalScore;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dizziness Handicap Inventory'),
-        centerTitle: true,
+    return CalculatorScaffold(
+      title: 'DHI',
+      body: [
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Dizziness Handicap Inventory\nAvalie o impacto da tontura',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          const Padding(
+             padding: EdgeInsets.symmetric(vertical: 8),
+             child: Text('Funcional', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.purple)),
+          ),
+          _buildQ('Sua tontura interfere quando caminha?', _data.dificuldadeCaminhar, 'caminhar'),
+          _buildQ('Sua tontura interfere em atividades físicas?', _data.dificuldadeAtividadesFisicas, 'fisicas'),
+          _buildQ('Sua tontura interfere no trabalho/responsabilidades?', _data.dificuldadeTrabalho, 'trabalho'),
+          _buildQ('Sua tontura interfere na leitura?', _data.dificuldadeLeitura, 'leitura'),
+          _buildQ('Sua tontura interfere em tarefas domésticas?', _data.dificuldadeTarefasDomesticas, 'domesticas'),
+          _buildQ('Sua tontura interfere em atividades recreativas?', _data.dificuldadeRecreacao, 'recreacao'),
+          _buildQ('Sua tontura interfere em viagens?', _data.dificuldadeViagens, 'viagens'),
+          _buildQ('Sua tontura interfere na alimentação?', _data.dificuldadeAlimentacao, 'alimentacao'),
+          _buildQ('Sua tontura interfere no uso de transporte?', _data.dificuldadeTransporte, 'transporte'),
+
+          const Padding(
+             padding: EdgeInsets.symmetric(vertical: 8),
+             child: Text('Emocional', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.purple)),
+          ),
+          _buildQ('Sua tontura o deixa ansioso?', _data.deixarAnsioso, 'ansioso'),
+          _buildQ('Sua tontura o deixa frustrado?', _data.deixarFrustrado, 'frustrado'),
+          _buildQ('Sua tontura o deixa irritado?', _data.deixarIrritado, 'irritado'),
+          _buildQ('Sua tontura o deixa embaraçado?', _data.deixarEmbaracado, 'embaracado'),
+          _buildQ('Sua tontura o deixa deprimido?', _data.deixarDeprimido, 'deprimido'),
+          _buildQ('Sua tontura afeta sua autoconfiança?', _data.afetarAutoconfianca, 'autoconfianca'),
+          _buildQ('Sua tontura afeta relacionamentos?', _data.afetarRelacionamentos, 'relacionamentos'),
+          _buildQ('Tem medo de cair devido à tontura?', _data.medoQueda, 'medoQueda'),
+          _buildQ('Preocupado com saúde devido à tontura?', _data.preocupacaoSaude, 'saude'),
+
+          const Padding(
+             padding: EdgeInsets.symmetric(vertical: 8),
+             child: Text('Físico', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.purple)),
+          ),
+          _buildQ('Piora ao virar a cabeça rápido?', _data.pioraVirarCabeca, 'virarCabeca'),
+          _buildQ('Piora ao olhar para cima?', _data.pioraOlharCima, 'olharCima'),
+          _buildQ('Piora ao levantar rápido?', _data.pioraLevantarRapido, 'levantar'),
+          _buildQ('Piora ao virar na cama?', _data.pioraVirarNaCama, 'virarCama'),
+          _buildQ('Piora ao se curvar?', _data.pioraAoCurvar, 'curvar'),
+          _buildQ('Piora ao caminhar?', _data.pioraAoCaminhar, 'pioraCaminhar'),
+          _buildQ('Piora ao se exercitar?', _data.pioraAoExercitar, 'exercitar'),
+
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: scoreTotal <= 30 ? Colors.green : scoreTotal <= 60 ? Colors.orange : Colors.red,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: (scoreTotal <= 30 ? Colors.green : scoreTotal <= 60 ? Colors.orange : Colors.red).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('DHI TOTAL', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                 const SizedBox(height: 8),
+                Text('$scoreTotal', style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1)),
+                const SizedBox(height: 8),
+                Text('F:${_data.scoreFuncional}  E:${_data.scoreEmocional}  Fi:${_data.scoreFisico}', style: const TextStyle(fontSize: 12, color: Colors.white70)),
+                const SizedBox(height: 12),
+                Text(_data.interpretacao, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white), textAlign: TextAlign.center),
+              ],
+            ),
+          ),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarDHI,
         backgroundColor: Colors.purple,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Dizziness Handicap Inventory (DHI)',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Avalie como sua tontura/vertigem afeta sua vida diária.\nResponda: Sim (4), Às vezes (2), ou Não (0)',
-            style: TextStyle(fontSize: 12),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Domínio Funcional (9 perguntas)',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.purple),
-          ),
-          const SizedBox(height: 8),
-          _buildRadioItem('Sua tontura interfere quando você caminha?', _data.dificuldadeCaminhar, (val) => setState(() => _data.dificuldadeCaminhar = val)),
-          _buildRadioItem('Sua tontura interfere em suas atividades físicas?', _data.dificuldadeAtividadesFisicas, (val) => setState(() => _data.dificuldadeAtividadesFisicas = val)),
-          _buildRadioItem('Sua tontura interfere no seu trabalho ou em suas responsabilidades?', _data.dificuldadeTrabalho, (val) => setState(() => _data.dificuldadeTrabalho = val)),
-          _buildRadioItem('Sua tontura interfere na sua capacidade de ler?', _data.dificuldadeLeitura, (val) => setState(() => _data.dificuldadeLeitura = val)),
-          _buildRadioItem('Sua tontura interfere na realização de tarefas domésticas?', _data.dificuldadeTarefasDomesticas, (val) => setState(() => _data.dificuldadeTarefasDomesticas = val)),
-          _buildRadioItem('Sua tontura interfere em suas atividades recreativas?', _data.dificuldadeRecreacao, (val) => setState(() => _data.dificuldadeRecreacao = val)),
-          _buildRadioItem('Sua tontura interfere quando você viaja?', _data.dificuldadeViagens, (val) => setState(() => _data.dificuldadeViagens = val)),
-          _buildRadioItem('Sua tontura interfere quando você come?', _data.dificuldadeAlimentacao, (val) => setState(() => _data.dificuldadeAlimentacao = val)),
-          _buildRadioItem('Sua tontura interfere quando você usa meios de transporte (ônibus, carro, etc.)?', _data.dificuldadeTransporte, (val) => setState(() => _data.dificuldadeTransporte = val)),
-          const SizedBox(height: 12),
-          const Text(
-            'Domínio Emocional (9 perguntas)',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.purple),
-          ),
-          const SizedBox(height: 8),
-          _buildRadioItem('Sua tontura o deixa ansioso ou preocupado?', _data.deixarAnsioso, (val) => setState(() => _data.deixarAnsioso = val)),
-          _buildRadioItem('Sua tontura o deixa frustrado?', _data.deixarFrustrado, (val) => setState(() => _data.deixarFrustrado = val)),
-          _buildRadioItem('Sua tontura o deixa irritado?', _data.deixarIrritado, (val) => setState(() => _data.deixarIrritado = val)),
-          _buildRadioItem('Sua tontura o deixa embaraçado?', _data.deixarEmbaracado, (val) => setState(() => _data.deixarEmbaracado = val)),
-          _buildRadioItem('Sua tontura o deixa deprimido?', _data.deixarDeprimido, (val) => setState(() => _data.deixarDeprimido = val)),
-          _buildRadioItem('Sua tontura afeta sua autoconfiança?', _data.afetarAutoconfianca, (val) => setState(() => _data.afetarAutoconfianca = val)),
-          _buildRadioItem('Sua tontura afeta seus relacionamentos familiares ou sociais?', _data.afetarRelacionamentos, (val) => setState(() => _data.afetarRelacionamentos = val)),
-          _buildRadioItem('Você tem medo de cair devido à sua tontura?', _data.medoQueda, (val) => setState(() => _data.medoQueda = val)),
-          _buildRadioItem('Você fica preocupado com sua saúde devido à tontura?', _data.preocupacaoSaude, (val) => setState(() => _data.preocupacaoSaude = val)),
-          const SizedBox(height: 12),
-          const Text(
-            'Domínio Físico (7 perguntas)',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.purple),
-          ),
-          const SizedBox(height: 8),
-          _buildRadioItem('Sua tontura piora quando você vira a cabeça rapidamente?', _data.pioraVirarCabeca, (val) => setState(() => _data.pioraVirarCabeca = val)),
-          _buildRadioItem('Sua tontura piora quando você olha para cima?', _data.pioraOlharCima, (val) => setState(() => _data.pioraOlharCima = val)),
-          _buildRadioItem('Sua tontura piora quando você se levanta rapidamente?', _data.pioraLevantarRapido, (val) => setState(() => _data.pioraLevantarRapido = val)),
-          _buildRadioItem('Sua tontura piora quando você vira na cama?', _data.pioraVirarNaCama, (val) => setState(() => _data.pioraVirarNaCama = val)),
-          _buildRadioItem('Sua tontura piora quando você se curva?', _data.pioraAoCurvar, (val) => setState(() => _data.pioraAoCurvar = val)),
-          _buildRadioItem('Sua tontura piora quando você caminha?', _data.pioraAoCaminhar, (val) => setState(() => _data.pioraAoCaminhar = val)),
-          _buildRadioItem('Sua tontura piora quando você se exercita?', _data.pioraAoExercitar, (val) => setState(() => _data.pioraAoExercitar = val)),
-          const SizedBox(height: 16),
-          Card(
-            color: scoreTotal <= 30 ? Colors.green : scoreTotal <= 60 ? Colors.orange : Colors.red,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Text(
-                    'Funcional: ${_data.scoreFuncional} | Emocional: ${_data.scoreEmocional} | Físico: ${_data.scoreFisico}',
-                    style: const TextStyle(fontSize: 12, color: Colors.white),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'DHI Score Total',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '$scoreTotal/100',
-                    style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    _data.interpretacao,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarDHI();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala DHI'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.purple,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-        ],
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }

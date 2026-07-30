@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/sf_mpq_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
 
 class SFMPQScreen extends StatefulWidget {
   const SFMPQScreen({super.key});
@@ -34,7 +35,7 @@ class _SFMPQScreenState extends State<SFMPQScreen> {
     {'title': 'Castigador', 'field': 'castigador'},
   ];
 
-  final List<String> _options = ['Nenhuma (0)', 'Leve (1)', 'Moderada (2)', 'Severa (3)'];
+  final List<String> _options = ['Nenhuma', 'Leve', 'Moderada', 'Severa'];
 
   Future<void> _salvarSFMPQ() async {
     try {
@@ -57,7 +58,7 @@ class _SFMPQScreenState extends State<SFMPQScreen> {
           'medo': _data.medo,
           'castigador': _data.castigador,
         },
-        resultado: '${_data.totalScore}/45 - ${_data.interpretation} (Sensorial: ${_data.scoreSensorial}/33, Afetivo: ${_data.scoreAfetivo}/12)',
+        resultado: '${_data.totalScore}/45 - ${_data.interpretation}',
         totalScore: _data.totalScore,
       );
       
@@ -79,13 +80,12 @@ class _SFMPQScreenState extends State<SFMPQScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao salvar: $e'), backgroundColor: Colors.red),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red));
       }
     }
   }
 
+  // --- Helpers ---
   int _getValue(String field) {
     switch (field) {
       case 'latejante': return _data.latejante;
@@ -127,38 +127,28 @@ class _SFMPQScreenState extends State<SFMPQScreen> {
     }
   }
 
-  Widget _buildItem(int index, Map<String, dynamic> item, int value, ValueChanged<int> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('${index + 1}. ${item['title']}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
+  Widget _buildItem(String title, int value, ValueChanged<int> onChanged) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('0', style: TextStyle(fontSize: 10)),
-                Text('$value/3', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                const Text('3', style: TextStyle(fontSize: 10)),
+                Text(title, style: const TextStyle(fontSize: 14)),
+                Text(_options[value], style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.deepOrange.shade900)),
               ],
             ),
-            Slider(
-              value: value.toDouble(),
-              min: 0,
-              max: 3,
-              divisions: 3,
-              label: _options[value],
-              onChanged: (val) => onChanged(val.toInt()),
-              activeColor: Colors.deepOrange,
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(activeTrackColor: Colors.deepOrange, thumbColor: Colors.deepOrange),
+              child: Slider(
+                value: value.toDouble(),
+                min: 0, max: 3, divisions: 3,
+                onChanged: (val) => onChanged(val.toInt()),
+              ),
             ),
-            const SizedBox(height: 4),
-            const Text('0: Nenhuma | 1: Leve | 2: Moderada | 3: Severa', style: TextStyle(fontSize: 9, color: Colors.grey)),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -166,78 +156,79 @@ class _SFMPQScreenState extends State<SFMPQScreen> {
   @override
   Widget build(BuildContext context) {
     final score = _data.totalScore;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('SF-MPQ'),
-        centerTitle: true,
-        backgroundColor: Colors.deepOrange,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'SF-MPQ - Short-Form McGill Pain Questionnaire\nAvaliação qualitativa e quantitativa da dor',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          Card(
-            margin: const EdgeInsets.only(bottom: 8),
-            color: Colors.deepOrange.shade50,
-            child: const Padding(
-              padding: EdgeInsets.all(8),
-              child: Text('Descritores Sensoriais (11 itens)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+    return CalculatorScaffold(
+      title: 'SF-MPQ',
+      body: [
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Short-Form McGill Pain Questionnaire',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+              textAlign: TextAlign.center,
             ),
           ),
-          ...List.generate(_sensorial.length, (i) => _buildItem(i, _sensorial[i], _getValue(_sensorial[i]['field']), (v) => _setValue(_sensorial[i]['field'], v))),
-          const SizedBox(height: 8),
+          
           Card(
-            margin: const EdgeInsets.only(bottom: 8),
-            color: Colors.deepOrange.shade50,
-            child: const Padding(
-              padding: EdgeInsets.all(8),
-              child: Text('Descritores Afetivos (4 itens)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            ),
-          ),
-          ...List.generate(_afetivo.length, (i) => _buildItem(11 + i, _afetivo[i], _getValue(_afetivo[i]['field']), (v) => _setValue(_afetivo[i]['field'], v))),
-          const SizedBox(height: 16),
-          Card(
-            color: score <= 9 ? Colors.green : score <= 18 ? Colors.orange : Colors.red,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('SF-MPQ Score', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('$score/45', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('Sensorial: ${_data.scoreSensorial}/33', style: const TextStyle(fontSize: 12, color: Colors.white70)),
-                  Text('Afetivo: ${_data.scoreAfetivo}/12', style: const TextStyle(fontSize: 12, color: Colors.white70)),
-                  const SizedBox(height: 12),
-                  Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
+                   Text('Sensorial', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.deepOrange.shade800)),
+                   const Divider(),
+                   ..._sensorial.map((s) => _buildItem(s['title'], _getValue(s['field']), (v) => _setValue(s['field'], v))),
                 ],
               ),
             ),
           ),
+
           const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: _salvarSFMPQ,
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala SF-MPQ'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                   Text('Afetivo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.deepOrange.shade800)),
+                   const Divider(),
+                   ..._afetivo.map((s) => _buildItem(s['title'], _getValue(s['field']), (v) => _setValue(s['field'], v))),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.deepOrange, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: score <= 15 ? Colors.green : score <= 30 ? Colors.orange : Colors.red,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: (score <= 15 ? Colors.green : score <= 30 ? Colors.orange : Colors.red).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('SF-MPQ SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text('$score', style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1)),
+                const SizedBox(height: 8),
+                Text('Sensorial: ${_data.scoreSensorial}  Afetivo: ${_data.scoreAfetivo}', style: const TextStyle(fontSize: 12, color: Colors.white70)),
+                const SizedBox(height: 12),
+                Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white), textAlign: TextAlign.center),
+              ],
+            ),
           ),
-        ],
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarSFMPQ,
+        backgroundColor: Colors.deepOrange,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
 }
-

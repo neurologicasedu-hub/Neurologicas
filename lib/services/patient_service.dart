@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/patient_data.dart';
 import '../models/completed_score.dart';
 
@@ -8,15 +8,20 @@ class PatientService {
   static const String _allPatientsKey = 'all_patients_data';
   static const String _completedScoresKey = 'completed_scores';
 
+  static const _storage = FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+    ),
+  );
+
   // --- GERENCIAMENTO DE múltiplos PACIENTES ---
 
   // Retorna a lista de todos os pacientes salvos
   static Future<List<PatientData>> getPatients() async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonString = prefs.getString(_allPatientsKey);
-    if (jsonString == null) return [];
-
     try {
+      final jsonString = await _storage.read(key: _allPatientsKey);
+      if (jsonString == null) return [];
+
       final jsonList = jsonDecode(jsonString) as List<dynamic>;
       return jsonList
           .map((e) => PatientData.fromJson(e as Map<String, dynamic>))
@@ -28,7 +33,6 @@ class PatientService {
 
   // Salva (ou atualiza) um paciente na lista e define como ativo
   static Future<void> savePatient(PatientData patient) async {
-    final prefs = await SharedPreferences.getInstance();
     final patients = await getPatients();
 
     // Verifica se já existe (pelo ID) e substitui ou adiciona
@@ -41,7 +45,7 @@ class PatientService {
 
     // Salva a lista atualizada
     final jsonList = patients.map((p) => p.toJson()).toList();
-    await prefs.setString(_allPatientsKey, jsonEncode(jsonList));
+    await _storage.write(key: _allPatientsKey, value: jsonEncode(jsonList));
 
     // Define este paciente como o ativo
     await setActivePatient(patient);
@@ -49,7 +53,6 @@ class PatientService {
 
   // Exclui um paciente
   static Future<void> deletePatient(String id) async {
-    final prefs = await SharedPreferences.getInstance();
     final patients = await getPatients();
     
     // Remove o paciente da lista
@@ -57,7 +60,7 @@ class PatientService {
     
     // Salva a lista atualizada
     final jsonList = patients.map((p) => p.toJson()).toList();
-    await prefs.setString(_allPatientsKey, jsonEncode(jsonList));
+    await _storage.write(key: _allPatientsKey, value: jsonEncode(jsonList));
 
     // Se o paciente excluído era o ativo, limpa o ativo
     final active = await loadPatientData();
@@ -70,18 +73,16 @@ class PatientService {
 
   // Define qual paciente é o "atual" (ativo)
   static Future<void> setActivePatient(PatientData patient) async {
-    final prefs = await SharedPreferences.getInstance();
     final json = jsonEncode(patient.toJson());
-    await prefs.setString(_currentPatientKey, json);
+    await _storage.write(key: _currentPatientKey, value: json);
   }
 
   // Carrega o paciente ativo (usado pelos formulários/escalas)
   static Future<PatientData?> loadPatientData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final json = prefs.getString(_currentPatientKey);
-    if (json == null) return null;
-    
     try {
+      final json = await _storage.read(key: _currentPatientKey);
+      if (json == null) return null;
+      
       final data = jsonDecode(json) as Map<String, dynamic>;
       return PatientData.fromJson(data);
     } catch (e) {
@@ -91,9 +92,7 @@ class PatientService {
 
   // Limpa apenas o paciente ativo (deslogar paciente)
   static Future<void> clearActivePatient() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_currentPatientKey);
-    // Nota: NÃO removemos os scores aqui, pois eles pertencem ao histórico
+    await _storage.delete(key: _currentPatientKey);
   }
 
   // Método legado para manter compatibilidade, mas agora apenas limpa o ativo
@@ -106,7 +105,6 @@ class PatientService {
   // Salvar escala completada (DENTRO DO PACIENTE ATIVO)
   static Future<void> saveCompletedScore(CompletedScore score) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
       final activePatient = await loadPatientData();
       
       // Vincula o score ao paciente ativo se houver
@@ -117,9 +115,6 @@ class PatientService {
       final scores = await getAllCompletedScores(); // Carrega tudo para não perder de outros pacientes
       
       // Lógica de substituição: (mesmo nome, mesmo paciente)
-      // Remove se já existir um score com mesmo nome para este paciente (ex: só pode ter 1 NIHSS por vez? 
-      // O codigo original substituia pelo nome. Vamos manter essa logica mas por paciente.)
-      
       scores.removeWhere((s) => 
         s.scoreName == score.scoreName && 
         s.patientId == score.patientId
@@ -128,7 +123,7 @@ class PatientService {
       scores.add(score);
       
       final jsonList = scores.map((s) => s.toJson()).toList();
-      await prefs.setString(_completedScoresKey, jsonEncode(jsonList));
+      await _storage.write(key: _completedScoresKey, value: jsonEncode(jsonList));
     } catch (e) {
       throw Exception('Erro ao salvar escala: $e');
     }
@@ -145,11 +140,10 @@ class PatientService {
 
   // Helper privado para carregar TUDO do storage (sem filtro)
   static Future<List<CompletedScore>> getAllCompletedScores() async {
-    final prefs = await SharedPreferences.getInstance();
-    final json = prefs.getString(_completedScoresKey);
-    if (json == null) return [];
-    
     try {
+      final json = await _storage.read(key: _completedScoresKey);
+      if (json == null) return [];
+      
       final jsonList = jsonDecode(json) as List<dynamic>;
       return jsonList
           .map((item) => CompletedScore.fromJson(item as Map<String, dynamic>))
@@ -160,8 +154,7 @@ class PatientService {
   }
 
   static Future<void> clearCompletedScores() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_completedScoresKey);
+    await _storage.delete(key: _completedScoresKey);
   }
 
   static Future<bool> isScoreCompleted(String scoreName) async {
@@ -171,7 +164,6 @@ class PatientService {
 
   static Future<void> deleteCompletedScore(CompletedScore score) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
       final scores = await getAllCompletedScores(); // Carrega todos
       
       scores.removeWhere((s) => 
@@ -181,7 +173,7 @@ class PatientService {
       );
       
       final jsonList = scores.map((s) => s.toJson()).toList();
-      await prefs.setString(_completedScoresKey, jsonEncode(jsonList));
+      await _storage.write(key: _completedScoresKey, value: jsonEncode(jsonList));
     } catch (e) {
       throw Exception('Erro ao excluir escala: $e');
     }

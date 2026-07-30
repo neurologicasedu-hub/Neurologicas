@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/ham_d_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class HAMDScreen extends StatefulWidget {
   const HAMDScreen({super.key});
@@ -14,23 +16,23 @@ class _HAMDScreenState extends State<HAMDScreen> {
   final HAMDData _data = HAMDData();
 
   final List<Map<String, dynamic>> _items = [
-    {'title': 'Humor Deprimido', 'max': 4, 'description': '0: Ausente\n1: Sentimentos expressos apenas quando questionado\n2: Relatado espontaneamente\n3: Comunicado através de expressão facial, voz e postura\n4: Humor depressivo expresso apenas através desses sinais'},
-    {'title': 'Sentimento de Culpa', 'max': 4, 'description': '0: Ausente\n1: Auto-reprovação; sente-se que decepcionou pessoas\n2: Ideias de culpa ou pensamentos sobre erros passados\n3: Presente doença é punição; delírios de culpa\n4: Alucinações de voz acusando ou ameaçando'},
-    {'title': 'Suicídio', 'max': 4, 'description': '0: Ausente\n1: Acha que a vida não vale a pena\n2: Desejos de estar morto ou pensamentos de morte\n3: Ideias ou gestos suicidas\n4: Tentativas de suicídio'},
-    {'title': 'Insônia Inicial', 'max': 2, 'description': '0: Sem dificuldade\n1: Reclama de ocasionais dificuldades\n2: Dificuldade todas as noites'},
-    {'title': 'Insônia do Meio da Noite', 'max': 2, 'description': '0: Sem dificuldade\n1: Paciente reclama de sono inquieto\n2: Despertares durante a noite'},
-    {'title': 'Insônia Final', 'max': 2, 'description': '0: Sem dificuldade\n1: Despertar cedo mas volta a dormir\n2: Incapaz de voltar a dormir'},
-    {'title': 'Trabalho e Atividades', 'max': 4, 'description': '0: Sem dificuldade\n1: Pensamentos e sentimentos de incapacidade\n2: Diminuição de atividades ou produtividade\n3: Parou trabalho por doença atual\n4: Incapaz de trabalhar'},
-    {'title': 'Retardo Psicomotor', 'max': 4, 'description': '0: Ausente\n1: Ligeira lentidão\n2: Lentidão óbvia\n3: Dificuldade entrevista\n4: Estupor'},
-    {'title': 'Agitação', 'max': 4, 'description': '0: Ausente\n1: Inquietude\n2: Brinca com mãos, cabelo, etc.\n3: Movimenta-se sem parar\n4: Mordendo unhas, puxando cabelo'},
-    {'title': 'Ansiedade Psíquica', 'max': 4, 'description': '0: Ausente\n1: Subjetiva tensão e irritabilidade\n2: Preocupação menor\n3: Aparência apreensiva\n4: Medos expressos sem questionamento'},
-    {'title': 'Ansiedade Somática', 'max': 4, 'description': '0: Ausente\n1: Leve\n2: Moderada\n3: Grave\n4: Incapacitante'},
-    {'title': 'Sintomas Somáticos GI', 'max': 2, 'description': '0: Ausente\n1: Perda de apetite mas come sem encorajamento\n2: Precisa ser encorajado para comer'},
-    {'title': 'Sintomas Somáticos Gerais', 'max': 2, 'description': '0: Ausente\n1: Pesos em membros, costas ou cabeça\n2: Qualquer sintoma claro e difuso'},
-    {'title': 'Sintomas Genitais', 'max': 2, 'description': '0: Ausente\n1: Leve\n2: Grave'},
-    {'title': 'Hipocondria', 'max': 4, 'description': '0: Ausente\n1: Auto-preocupação (corpo)\n2: Preocupa-se com saúde\n3: Queixas frequentes\n4: Delírios hipocondríacos'},
-    {'title': 'Perda de Peso', 'max': 2, 'description': '0: Ausente\n1: Provável perda de peso\n2: Perda de peso definitiva'},
-    {'title': 'Insight', 'max': 2, 'description': '0: Reconoce que está deprimido\n1: Reconhece doença mas atribui a causas físicas\n2: Nega estar doente'},
+    {'title': 'Humor Deprimido', 'max': 4, 'description': 'Tristeza, desesperança, impotência, inutilidade.'},
+    {'title': 'Sentimento de Culpa', 'max': 4, 'description': 'Auto-reprovação, culpa patológica.'},
+    {'title': 'Suicídio', 'max': 4, 'description': 'Pensamentos de morte ou suicídio.'},
+    {'title': 'Insônia Inicial', 'max': 2, 'description': 'Dificuldade em adormecer.'},
+    {'title': 'Insônia do Meio', 'max': 2, 'description': 'Sono inquieto ou despertar noturno.'},
+    {'title': 'Insônia Final', 'max': 2, 'description': 'Despertar matinal precoce.'},
+    {'title': 'Trabalho e Atividades', 'max': 4, 'description': 'Perda de interesse ou fadiga no trabalho/lazer.'},
+    {'title': 'Retardo Psicomotor', 'max': 4, 'description': 'Lentidão de pensamento e fala; dificuldade de concentração.'},
+    {'title': 'Agitação', 'max': 4, 'description': 'Inquietação motora.'},
+    {'title': 'Ansiedade Psíquica', 'max': 4, 'description': 'Tensão, irritabilidade, preocupação.'},
+    {'title': 'Ansiedade Somática', 'max': 4, 'description': 'Sintomas físicos da ansiedade (GI, CV, etc).'},
+    {'title': 'Sintomas Somáticos GI', 'max': 2, 'description': 'Perda de apetite, constipação.'},
+    {'title': 'Sintomas Somáticos Gerais', 'max': 2, 'description': 'Fadiga, dores musculares, peso.'},
+    {'title': 'Sintomas Genitais', 'max': 2, 'description': 'Perda de libido, distúrbios menstruais.'},
+    {'title': 'Hipocondria', 'max': 4, 'description': 'Preocupação excessiva com a saúde.'},
+    {'title': 'Perda de Peso', 'max': 2, 'description': 'Perda de peso evidente.'},
+    {'title': 'Insight', 'max': 2, 'description': 'Consciência da doença.'},
   ];
 
   Future<void> _salvarHAMD() async {
@@ -85,69 +87,21 @@ class _HAMDScreenState extends State<HAMDScreen> {
     }
   }
 
-  Widget _buildItem(int index, Map<String, dynamic> item, int value, ValueChanged<int> onChanged) {
-    final items = [
-      _data.humorDeprimido, _data.sentimentoCulpa, _data.suicidio, _data.insoniaInicial,
-      _data.insoniaMeio, _data.insoniaFinal, _data.trabalhoAtividades, _data.retardoPsicomotor,
-      _data.agitacao, _data.ansiedadePsiquica, _data.ansiedadeSomatica, _data.sintomasSomaticosGI,
-      _data.sintomasSomaticosGerais, _data.sintomasGenitais, _data.hipocondria, _data.perdaPeso,
-      _data.insight,
-    ];
-    
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('${index + 1}. ${item['title']}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            if (item['description'] != null) ...[
-              const SizedBox(height: 4),
-              Text(item['description'], style: TextStyle(fontSize: 9, color: Colors.grey.shade700)),
-            ],
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('0', style: TextStyle(fontSize: 10)),
-                Text('${items[index]}/${item['max']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                Text('${item['max']}', style: const TextStyle(fontSize: 10)),
-              ],
-            ),
-            Slider(
-              value: items[index].toDouble(),
-              min: 0,
-              max: item['max'].toDouble(),
-              divisions: item['max'],
-              onChanged: (val) => onChanged(val.toInt()),
-              activeColor: Colors.blue.shade700,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final score = _data.totalScore;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('HAM-D / HDRS'),
-        centerTitle: true,
-        backgroundColor: Colors.blue.shade700,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'HAM-D - Hamilton Depression Rating Scale\nAvaliação clínica de sintomas depressivos (17 itens)',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
+    return CalculatorScaffold(
+      title: 'HAM-D (Hamilton)',
+      body: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Avaliação clínica de 17 itens para depressão.',
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
           ),
-          const SizedBox(height: 16),
+
           _buildItem(0, _items[0], _data.humorDeprimido, (v) => setState(() => _data.humorDeprimido = v)),
           _buildItem(1, _items[1], _data.sentimentoCulpa, (v) => setState(() => _data.sentimentoCulpa = v)),
           _buildItem(2, _items[2], _data.suicidio, (v) => setState(() => _data.suicidio = v)),
@@ -165,41 +119,85 @@ class _HAMDScreenState extends State<HAMDScreen> {
           _buildItem(14, _items[14], _data.hipocondria, (v) => setState(() => _data.hipocondria = v)),
           _buildItem(15, _items[15], _data.perdaPeso, (v) => setState(() => _data.perdaPeso = v)),
           _buildItem(16, _items[16], _data.insight, (v) => setState(() => _data.insight = v)),
-          const SizedBox(height: 16),
-          Card(
-            color: score <= 7 ? Colors.green : score <= 17 ? Colors.lightGreen : score <= 24 ? Colors.orange : Colors.red,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text('HAM-D Score', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('$score/52', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                ],
-              ),
+
+          // Result Card
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _getScoreColor(score),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(score).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('HAM-D SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  '$score',
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                const Text(
+                  '/ 52',
+                  style: TextStyle(fontSize: 18, color: Colors.white70),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                   decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                   child: Text(
+                    _data.interpretation,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: _salvarHAMD,
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala HAM-D'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade700, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
-        ],
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarHAMD,
+        backgroundColor: Colors.blue.shade700,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
-}
 
+  Widget _buildItem(int index, Map<String, dynamic> item, int value, ValueChanged<int> onChanged) {
+    // Determine options based on max score (2 or 4)
+    List<QuestionOption<int>> options;
+    if (item['max'] == 2) {
+      options = [
+        const QuestionOption(label: '0 - Ausente', value: 0),
+        const QuestionOption(label: '1 - Leve/Provável', value: 1),
+        const QuestionOption(label: '2 - Grave/Definitivo', value: 2),
+      ];
+    } else {
+      options = [
+        const QuestionOption(label: '0 - Ausente', value: 0),
+        const QuestionOption(label: '1 - Leve', value: 1),
+        const QuestionOption(label: '2 - Moderado', value: 2),
+        const QuestionOption(label: '3 - Grave', value: 3),
+        const QuestionOption(label: '4 - Muito Grave/Incapacitante', value: 4),
+      ];
+    }
+
+    return QuestionCard<int>(
+      title: '${index + 1}. ${item['title']}',
+      subtitle: item['description'],
+      value: value,
+      onChanged: onChanged,
+      options: options,
+    );
+  }
+
+  Color _getScoreColor(int score) {
+    if (score <= 7) return Colors.green;
+    if (score <= 17) return Colors.lightGreen;
+    if (score <= 24) return Colors.orange;
+    return Colors.red;
+  }
+}

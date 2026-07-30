@@ -3,6 +3,8 @@ import '../models/abcd_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
 import '../helpers/auto_save_mixin.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class ABCDScreen extends StatefulWidget {
   const ABCDScreen({super.key});
@@ -103,7 +105,7 @@ class _ABCDScreenState extends State<ABCDScreen> with AutoSaveMixin {
           'carotidStenosisIpsilateral50': _abcdData.carotidStenosisIpsilateral50,
         },
         resultado: 'ABCD2: ${_abcdData.abcd2Score} - ${_abcdData.interpretacaoABCD2}\nABCD3-I: ${_abcdData.abcd3IScore} - ${_abcdData.interpretacaoABCD3I}',
-        totalScore: _abcdData.abcd3IScore, // Usa ABCD3-I como score principal
+        totalScore: _abcdData.abcd3IScore, 
       );
       
       await PatientService.saveCompletedScore(score);
@@ -144,109 +146,47 @@ class _ABCDScreenState extends State<ABCDScreen> with AutoSaveMixin {
     final interpretacao2 = _abcdData.interpretacaoABCD2;
     final interpretacao3i = _abcdData.interpretacaoABCD3I;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('ABCD2 / ABCD3-I'),
-        centerTitle: true,
-        backgroundColor: Colors.cyan,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Preencha dados do paciente para calcular ABCD2 e ABCD3-I:',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _ageController,
-                  decoration: const InputDecoration(
-                    labelText: 'Idade',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  onChanged: (v) {
-                    setState(() {
-                      _abcdData.age = int.tryParse(v) ?? _abcdData.age;
-                    });
-                    onDataChanged();
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  controller: _systolicController,
-                  decoration: const InputDecoration(
-                    labelText: 'PAS (mmHg)',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  onChanged: (v) {
-                    setState(() {
-                      _abcdData.systolicBP = int.tryParse(v) ?? _abcdData.systolicBP;
-                    });
-                    onDataChanged();
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  controller: _diastolicController,
-                  decoration: const InputDecoration(
-                    labelText: 'PAD (mmHg)',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  onChanged: (v) {
-                    setState(() {
-                      _abcdData.diastolicBP = int.tryParse(v) ?? _abcdData.diastolicBP;
-                    });
-                    onDataChanged();
-                  },
-                ),
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 12),
-          
-          _buildSwitchItem(
-            'Clínica: paresia focal (+2 pontos)',
-            _abcdData.clinicalWeakness,
-            (val) {
-              setState(() {
-                _abcdData.clinicalWeakness = val;
-                if (val) _abcdData.clinicalSpeech = false;
-              });
-              onDataChanged();
-            },
-          ),
-          _buildSwitchItem(
-            'Clínica: distúrbio isolado de linguagem (+1 ponto)',
-            _abcdData.clinicalSpeech,
-            (val) {
-              setState(() {
-                _abcdData.clinicalSpeech = val;
-                if (val) _abcdData.clinicalWeakness = false;
-              });
-              onDataChanged();
-            },
-          ),
-          
-          TextField(
+    return CalculatorScaffold(
+      title: 'ABCD2 / ABCD3-I',
+      body: [
+        _buildDemographicsCard(),
+        
+        QuestionCard<String>(
+          title: "Sintomas Clínicos",
+          subtitle: "Selecione o sintoma primário",
+          value: _getClinicalSymptom(),
+          options: const [
+            QuestionOption(label: 'Paresia focal (+2)', value: 'weakness'),
+            QuestionOption(label: 'Distúrbio de linguagem isolado (+1)', value: 'speech'),
+            QuestionOption(label: 'Nenhum destes (0)', value: 'none'),
+          ],
+          onChanged: (val) {
+            setState(() {
+              if (val == 'weakness') {
+                _abcdData.clinicalWeakness = true;
+                _abcdData.clinicalSpeech = false;
+              } else if (val == 'speech') {
+                _abcdData.clinicalWeakness = false;
+                _abcdData.clinicalSpeech = true;
+              } else {
+                _abcdData.clinicalWeakness = false;
+                _abcdData.clinicalSpeech = false;
+              }
+            });
+            onDataChanged();
+          },
+        ),
+
+        QuestionCard<bool>(
+          title: "Duração dos Sintomas",
+          value: false, // Not using toggle behavior here, custom input
+          content: TextField(
             controller: _durationController,
-            decoration: const InputDecoration(
-              labelText: 'Duração do sintoma (minutos)',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: 'Duração em minutos',
+              hintText: 'Ex: 45',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
             keyboardType: TextInputType.number,
             onChanged: (v) {
@@ -256,204 +196,198 @@ class _ABCDScreenState extends State<ABCDScreen> with AutoSaveMixin {
               onDataChanged();
             },
           ),
-          
-          const SizedBox(height: 8),
-          
-          _buildSwitchItem(
-            'Diabetes presente (+1)',
-            _abcdData.diabetes,
-            (val) {
-              setState(() => _abcdData.diabetes = val);
-              onDataChanged();
-            },
+          options: const [], // Empty options as it is an input only card, or we could add quick select chips
+          onChanged: (_) {},
+        ),
+
+        QuestionCard<bool>(
+          title: "Fatores de Risco",
+          value: _abcdData.diabetes,
+          options: const [QuestionOption(label: 'Diabetes presente (+1)', value: true)],
+          onChanged: (val) {
+             setState(() => _abcdData.diabetes = !_abcdData.diabetes);
+             onDataChanged();
+          },
+        ),
+
+        Container(
+          margin: const EdgeInsets.all(16),
+          child: const Divider(),
+        ),
+
+        QuestionCard<String>(
+          title: "Fatores ABCD3-I (Imagem/Recorrência)",
+          value: 'dummy', // Using as multi-select list basically
+          options: const [],
+          content: Column(
+            children: [
+               _buildSwitchTile('Dois TIAs em 7 dias (+2)', _abcdData.twoTIAsWithin7Days, (v) {
+                 setState(() => _abcdData.twoTIAsWithin7Days = v);
+                 onDataChanged();
+               }),
+               _buildSwitchTile('DWI positivo na RM (+2)', _abcdData.dwiPositive, (v) {
+                 setState(() => _abcdData.dwiPositive = v);
+                 onDataChanged();
+               }),
+               _buildSwitchTile('Estenose carotídea >=50% (+2)', _abcdData.carotidStenosisIpsilateral50, (v) {
+                 setState(() => _abcdData.carotidStenosisIpsilateral50 = v);
+                 onDataChanged();
+               }),
+            ],
           ),
-          
-          const SizedBox(height: 16),
-          const Divider(),
-          const SizedBox(height: 8),
-          
-          const Text(
-            'Fatores adicionais ABCD3-I:',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          
-          const SizedBox(height: 8),
-          
-          _buildSwitchItem(
-            'Dois TIAs em 7 dias (recorrência) (+2)',
-            _abcdData.twoTIAsWithin7Days,
-            (val) {
-              setState(() => _abcdData.twoTIAsWithin7Days = val);
-              onDataChanged();
-            },
-          ),
-          _buildSwitchItem(
-            'Lesão DWI positiva na ressonância (+2)',
-            _abcdData.dwiPositive,
-            (val) {
-              setState(() => _abcdData.dwiPositive = val);
-              onDataChanged();
-            },
-          ),
-          _buildSwitchItem(
-            'Estenose carotídea ipsilateral >=50% (+2)',
-            _abcdData.carotidStenosisIpsilateral50,
-            (val) {
-              setState(() => _abcdData.carotidStenosisIpsilateral50 = val);
-              onDataChanged();
-            },
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Resultado ABCD2
-          Card(
-            color: Colors.cyan.shade50,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            elevation: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  const Text(
-                    'ABCD2',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.cyan,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '$abcd2',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.cyan.shade700,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    interpretacao2,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.cyan.shade700,
-                    ),
-                  ),
-                ],
+          onChanged: (_) {},
+        ),
+
+        // Results Card
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                 decoration: BoxDecoration(
+                  color: Colors.cyan.shade50,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(color: Colors.cyan.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    const Text('ABCD2', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.cyan)),
+                    const SizedBox(height: 4),
+                    Text('$abcd2', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.cyan.shade700)),
+                    Text(interpretacao2, style: TextStyle(fontSize: 11, color: Colors.cyan.shade800), textAlign: TextAlign.center),
+                  ],
+                ),
               ),
             ),
-          ),
-          
-          const SizedBox(height: 12),
-          
-          // Resultado ABCD3-I
-          Card(
-            color: Colors.teal.shade50,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            elevation: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  const Text(
-                    'ABCD3-I',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.teal,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '$abcd3i',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.teal.shade700,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    interpretacao3i,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.teal.shade700,
-                    ),
-                  ),
-                ],
+            const SizedBox(width: 12),
+            Expanded(
+               child: Container(
+                padding: const EdgeInsets.all(16),
+                 decoration: BoxDecoration(
+                  color: Colors.teal.shade50,
+                  borderRadius: BorderRadius.circular(20),
+                   boxShadow: [
+                    BoxShadow(color: Colors.teal.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    const Text('ABCD3-I', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal)),
+                     const SizedBox(height: 4),
+                    Text('$abcd3i', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.teal.shade700)),
+                    Text(interpretacao3i, style: TextStyle(fontSize: 11, color: Colors.teal.shade800), textAlign: TextAlign.center),
+                  ],
+                ),
               ),
             ),
+          ],
+        ),
+        const SizedBox(height: 24),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarABCD,
+        backgroundColor: Colors.teal,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+
+  Widget _buildSwitchTile(String title, bool value, ValueChanged<bool> onChanged) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: value ? Colors.teal.withOpacity(0.1) : Colors.grey.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: value ? Colors.teal : Colors.transparent),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: Text(title, style: TextStyle(fontSize: 13, fontWeight: value ? FontWeight.bold : FontWeight.normal))),
+          Switch(
+            value: value, 
+            onChanged: onChanged,
+            activeColor: Colors.teal,
           ),
-          
-          const SizedBox(height: 12),
-          
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Text(
-              'Observação: ABCD2 provê um risco clínico inicial; ABCD3-I melhora estratificação com imagem/recorrência. Use em combinação com avaliação clínica.',
-              style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
-            ),
-          ),
-          
-          const SizedBox(height: 20),
-          
-          // Botões
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarABCD();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala ABCD2/ABCD3-I'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  String _getClinicalSymptom() {
+    if (_abcdData.clinicalWeakness) return 'weakness';
+    if (_abcdData.clinicalSpeech) return 'speech';
+    return 'none';
+  }
+
+  Widget _buildDemographicsCard() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        children: [
           Row(
             children: [
               Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  icon: const Icon(Icons.arrow_back),
-                  label: const Text('Voltar'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                child: TextField(
+                  controller: _ageController,
+                  decoration: InputDecoration(
+                    labelText: 'Idade', 
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12)
                   ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (v) {
+                    setState(() => _abcdData.age = int.tryParse(v) ?? _abcdData.age);
+                    onDataChanged();
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+               Expanded(
+                child: TextField(
+                  controller: _systolicController,
+                  decoration: InputDecoration(
+                    labelText: 'PAS', 
+                    suffixText: 'mmHg',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12)
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (v) {
+                    setState(() => _abcdData.systolicBP = int.tryParse(v) ?? _abcdData.systolicBP);
+                    onDataChanged();
+                  },
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.popUntil(context, (route) => route.isFirst);
-                  },
-                  icon: const Icon(Icons.home),
-                  label: const Text('Início'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                child: TextField(
+                  controller: _diastolicController,
+                  decoration: InputDecoration(
+                    labelText: 'PAD', 
+                    suffixText: 'mmHg',
+                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12)
                   ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (v) {
+                    setState(() => _abcdData.diastolicBP = int.tryParse(v) ?? _abcdData.diastolicBP);
+                    onDataChanged();
+                  },
                 ),
               ),
             ],
@@ -462,21 +396,7 @@ class _ABCDScreenState extends State<ABCDScreen> with AutoSaveMixin {
       ),
     );
   }
-
-  Widget _buildSwitchItem(String title, bool value, ValueChanged<bool> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: SwitchListTile(
-        title: Text(title, style: const TextStyle(fontSize: 14)),
-        value: value,
-        onChanged: onChanged,
-        activeThumbColor: Colors.cyan,
-        dense: true,
-      ),
-    );
-  }
-
+  
   @override
   void dispose() {
     _ageController.dispose();

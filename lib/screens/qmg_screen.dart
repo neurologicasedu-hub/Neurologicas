@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/qmg_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
 
 class QMGScreen extends StatefulWidget {
   const QMGScreen({super.key});
@@ -68,78 +69,121 @@ class _QMGScreenState extends State<QMGScreen> {
   @override
   Widget build(BuildContext context) {
     final score = _data.totalScore;
-    return Scaffold(
-      appBar: AppBar(title: const Text('QMG Score'), centerTitle: true, backgroundColor: Colors.lightBlue.shade700),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text('Quantitative Myasthenia Gravis Score', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8)),
-            child: const Text('Legenda:\n0 = Normal/Nenhum\n1 = Leve\n2 = Moderado\n3 = Severo', textAlign: TextAlign.center, style: TextStyle(fontSize: 12)),
-          ),
-          const SizedBox(height: 12),
-          _buildSliderItem('Ptose', _data.ptose, 3, (val) => setState(() => _data.ptose = val)),
-          _buildSliderItem('Diplopia', _data.diplopia, 3, (val) => setState(() => _data.diplopia = val)),
-          _buildSliderItem('Fechamento Ocular', _data.fechamentoOcular, 3, (val) => setState(() => _data.fechamentoOcular = val)),
-          _buildSliderItem('Fala', _data.fala, 3, (val) => setState(() => _data.fala = val)),
-          _buildSliderItem('Mastigação', _data.mastigacao, 3, (val) => setState(() => _data.mastigacao = val)),
-          _buildSliderItem('Deglutição', _data.degluticao, 3, (val) => setState(() => _data.degluticao = val)),
-          _buildSliderItem('Força Respiratória', _data.forcaRespiratoria, 3, (val) => setState(() => _data.forcaRespiratoria = val)),
-          _buildSliderItem('Flexão Pescoço', _data.flexaoPescoco, 3, (val) => setState(() => _data.flexaoPescoco = val)),
-          _buildSliderItem('Flexão Ombro', _data.flexaoOmbro, 3, (val) => setState(() => _data.flexaoOmbro = val)),
-          _buildSliderItem('Extensão Punho', _data.extensaoPunho, 3, (val) => setState(() => _data.extensaoPunho = val)),
-          _buildSliderItem('Flexão Quadril', _data.flexaoQuadril, 3, (val) => setState(() => _data.flexaoQuadril = val)),
-          _buildSliderItem('Extensão Joelho', _data.extensaoJoelho, 3, (val) => setState(() => _data.extensaoJoelho = val)),
-          _buildSliderItem('Dorsiflexão Tornozelo', _data.dorsiflexaoTornozelo, 3, (val) => setState(() => _data.dorsiflexaoTornozelo = val)),
-          const SizedBox(height: 16),
-          Card(color: _getScoreColor(score), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 6, child: Padding(padding: const EdgeInsets.all(20), child: Column(children: [const Text('QMG Score', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)), const SizedBox(height: 8), Text('$score/39', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)), const SizedBox(height: 12), Text(_data.interpretacao, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center)]))),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarQMG();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala QMG'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+    
+    return CalculatorScaffold(
+      title: 'QMG Score',
+      body: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Quantitative Myasthenia Gravis Score\nScore 0 (Não) a 3 (Grave) para cada item',
+              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+              textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.arrow_back), label: const Text('Voltar'), style: ElevatedButton.styleFrom(backgroundColor: Colors.lightBlue.shade700, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12))),
-        ],
+          
+          _buildItem('Ptose (Up-gaze 60s)', _data.ptose, (v) => setState(() => _data.ptose = v)),
+          _buildItem('Diplopia (Lateral gaze 60s)', _data.diplopia, (v) => setState(() => _data.diplopia = v)),
+          _buildItem('Fechamento Ocular (Resistência)', _data.fechamentoOcular, (v) => setState(() => _data.fechamentoOcular = v)),
+          _buildItem('Fala (Contar 1-50)', _data.fala, (v) => setState(() => _data.fala = v)),
+          _buildItem('Mastigação', _data.mastigacao, (v) => setState(() => _data.mastigacao = v)),
+          _buildItem('Deglutição (100ml água)', _data.degluticao, (v) => setState(() => _data.degluticao = v)),
+          _buildItem('Força Respiratória (% predito)', _data.forcaRespiratoria, (v) => setState(() => _data.forcaRespiratoria = v)),
+          _buildItem('Flexão Pescoço (shentada)', _data.flexaoPescoco, (v) => setState(() => _data.flexaoPescoco = v)),
+          _buildItem('Flexão Ombro (Abdução 90°)', _data.flexaoOmbro, (v) => setState(() => _data.flexaoOmbro = v)),
+          _buildItem('Extensão Punho', _data.extensaoPunho, (v) => setState(() => _data.extensaoPunho = v)),
+          _buildItem('Flexão Quadril', _data.flexaoQuadril, (v) => setState(() => _data.flexaoQuadril = v)),
+          _buildItem('Extensão Joelho', _data.extensaoJoelho, (v) => setState(() => _data.extensaoJoelho = v)),
+          _buildItem('Dorsiflexão Tornozelo', _data.dorsiflexaoTornozelo, (v) => setState(() => _data.dorsiflexaoTornozelo = v)),
+
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _getScoreColor(score),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(score).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('QMG SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  '$score/39',
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                 const SizedBox(height: 12),
+                 Text(
+                  _data.interpretacao,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarQMG,
+        backgroundColor: Colors.lightBlue.shade700,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
 
-  Widget _buildSliderItem(String title, int value, int max, ValueChanged<int> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
+  Widget _buildItem(String title, int value, ValueChanged<int> onChanged) {
+     return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      elevation: 0,
+       color: Colors.white,
+       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.shade100)),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(child: Text(title, style: const TextStyle(fontSize: 12))),
-                Text('$value/$max', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-              ],
-            ),
-            Slider(
-              value: value.toDouble(),
-              min: 0,
-              max: max.toDouble(),
-              divisions: max,
-              onChanged: (val) => onChanged(val.toInt()),
-              activeColor: Colors.lightBlue.shade700,
-            ),
+             Row(
+               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+               children: [
+                 Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+                 Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                   decoration: BoxDecoration(color: Colors.lightBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+                   child: Text('$value', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.lightBlue.shade800)),
+                 ),
+               ],
+             ),
+             const SizedBox(height: 4),
+             SliderTheme(
+               data: SliderTheme.of(context).copyWith(
+                 activeTrackColor: Colors.lightBlue.shade700,
+                 thumbColor: Colors.lightBlue.shade700,
+                 overlayColor: Colors.lightBlue.shade700.withOpacity(0.1),
+                 inactiveTrackColor: Colors.lightBlue.shade100,
+                 trackHeight: 2,
+                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+               ),
+               child: Slider(
+                value: value.toDouble(),
+                min: 0,
+                max: 3,
+                divisions: 3,
+                label: '$value',
+                onChanged: (val) => onChanged(val.toInt()),
+              ),
+             ),
+             Padding(
+               padding: const EdgeInsets.symmetric(horizontal: 8),
+               child: Row(
+                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                 children: [
+                    Text('0: Nenhum', style: TextStyle(fontSize: 10, color: Colors.grey[500])),
+                    Text('3: Grave', style: TextStyle(fontSize: 10, color: Colors.grey[500])),
+                 ],
+               ),
+             ),
           ],
         ),
       ),
@@ -152,4 +196,3 @@ class _QMGScreenState extends State<QMGScreen> {
     return Colors.red;
   }
 }
-

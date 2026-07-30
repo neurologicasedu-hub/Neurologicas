@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/gbs_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
 
 class GBSScreen extends StatefulWidget {
   const GBSScreen({super.key});
@@ -55,52 +56,113 @@ class _GBSScreenState extends State<GBSScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('GBS Disability Score'), centerTitle: true, backgroundColor: Colors.green.shade700),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text('Guillain-Barré Syndrome Disability Score', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-          const SizedBox(height: 12),
-          ...List.generate(7, (index) {
-            int nivel = index;
-            final tempData = GBSData(nivelDeficiencia: nivel);
-            return _buildRadioItem('Nível $nivel', tempData.descricao, nivel == _data.nivelDeficiencia, () => setState(() => _data.nivelDeficiencia = nivel));
-          }),
-          const SizedBox(height: 16),
-          Card(color: _getScoreColor(_data.nivelDeficiencia), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 6, child: Padding(padding: const EdgeInsets.all(20), child: Column(children: [Text('Nível ${_data.nivelDeficiencia}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)), const SizedBox(height: 12), Text(_data.interpretacao, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center), const SizedBox(height: 12), Text(_data.conduta, style: const TextStyle(fontSize: 13, color: Colors.white70), textAlign: TextAlign.center)]))),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarGBS();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala GBS'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+    final nivel = _data.nivelDeficiencia;
+    final interpretacao = _data.interpretacao;
+    final conduta = _data.conduta;
+    
+    return CalculatorScaffold(
+      title: 'GBS Disability Score',
+      body: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Guillain-Barré Syndrome Disability Score',
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.arrow_back), label: const Text('Voltar'), style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade700, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12))),
-        ],
-      ),
-    );
-  }
+          
+          ...List.generate(7, (index) {
+            int currentLevel = index;
+            final tempData = GBSData(nivelDeficiencia: currentLevel);
+            final isSelected = currentLevel == nivel;
+            
+            return GestureDetector(
+              onTap: () => setState(() => _data.nivelDeficiencia = currentLevel),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.green.shade50 : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: isSelected ? Colors.green : Colors.transparent, width: 2),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: isSelected ? Colors.green : Colors.grey),
+                        color: isSelected ? Colors.green : Colors.transparent,
+                      ),
+                       child: isSelected ? const Icon(Icons.check, size: 16, color: Colors.white) : null,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Nível $currentLevel', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isSelected ? Colors.green.shade800 : Colors.black87)),
+                          const SizedBox(height: 4),
+                          Text(tempData.descricao, style: TextStyle(fontSize: 13, color: Colors.grey.shade700)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
 
-  Widget _buildRadioItem(String title, String description, bool selected, VoidCallback onTap) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: selected ? 4 : 1,
-      color: selected ? Colors.green.shade50 : null,
-      child: RadioListTile<int>(
-        title: Text(title, style: TextStyle(fontSize: 14, fontWeight: selected ? FontWeight.bold : FontWeight.normal)),
-        subtitle: Text(description, style: const TextStyle(fontSize: 12)),
-        value: 1,
-        groupValue: selected ? 1 : null,
-        onChanged: (_) => onTap(),
-        activeColor: Colors.green.shade700,
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _getScoreColor(nivel),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(nivel).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('RESULTADO', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  'Nível $nivel',
+                  style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                 const SizedBox(height: 12),
+                 Text(
+                  interpretacao,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
+                 const SizedBox(height: 8),
+                 Container(
+                   padding: const EdgeInsets.all(8),
+                   decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+                   child: Text(
+                      conduta,
+                      style: const TextStyle(fontSize: 12, color: Colors.white),
+                      textAlign: TextAlign.center,
+                    ),
+                 ),
+              ],
+            ),
+          ),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarGBS,
+        backgroundColor: Colors.green,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -111,4 +173,3 @@ class _GBSScreenState extends State<GBSScreen> {
     return Colors.red;
   }
 }
-

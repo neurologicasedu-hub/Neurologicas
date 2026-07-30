@@ -3,6 +3,7 @@ import '../models/aspects_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
 import '../helpers/auto_save_mixin.dart';
+import '../widgets/calculator_scaffold.dart';
 
 class AspectsScreen extends StatefulWidget {
   const AspectsScreen({super.key});
@@ -110,21 +111,18 @@ class _AspectsScreenState extends State<AspectsScreen> with AutoSaveMixin {
     final score = _data.totalScore;
     final interpretacao = _data.interpretacao;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('ASPECTS'),
-        centerTitle: true,
-        backgroundColor: Colors.indigo,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Alberta Stroke Program Early CT Score\n(Marcar áreas afetadas)',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
+    return CalculatorScaffold(
+      title: 'ASPECTS',
+      body: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Alberta Stroke Program Early CT Score\n(Marcar áreas afetadas)',
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
           ),
-          const SizedBox(height: 12),
+          
           _buildCheckbox('Núcleo Caudado', _data.caudado, (val) {
             setState(() => _data.caudado = val);
             onDataChanged();
@@ -165,58 +163,74 @@ class _AspectsScreenState extends State<AspectsScreen> with AutoSaveMixin {
             setState(() => _data.M6 = val);
             onDataChanged();
           }),
-          const SizedBox(height: 16),
-          Card(
-            color: _getScoreColor(score),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text('Score ASPECTS', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('$score/10', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(interpretacao, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                ],
-              ),
+          
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _getScoreColor(score),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(score).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('ASPECTS SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  '$score',
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                 const Text(
+                  '/ 10',
+                  style: TextStyle(fontSize: 18, color: Colors.white70),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                   decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                   child: Text(
+                    interpretacao,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarASPECTS();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala ASPECTS'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
-        ],
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarASPECTS,
+        backgroundColor: Colors.indigo,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
 
   Widget _buildCheckbox(String title, bool value, ValueChanged<bool> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: value ? Colors.indigo : Colors.transparent, width: 2),
+         boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
       child: CheckboxListTile(
-        title: Text(title, style: const TextStyle(fontSize: 14)),
+        title: Text(title, style: TextStyle(
+          fontSize: 16, 
+          fontWeight: value ? FontWeight.bold : FontWeight.w500,
+          color: const Color(0xFF2D3748),
+        )),
         value: value,
         onChanged: (val) => onChanged(val ?? false),
         activeColor: Colors.indigo,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
     );
   }
@@ -227,4 +241,3 @@ class _AspectsScreenState extends State<AspectsScreen> with AutoSaveMixin {
     return Colors.red;
   }
 }
-

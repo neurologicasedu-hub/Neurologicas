@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/psqi_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
 
 class PSQIScreen extends StatefulWidget {
   const PSQIScreen({super.key});
@@ -75,273 +76,179 @@ class _PSQIScreenState extends State<PSQIScreen> {
     }
   }
 
-  Widget _buildSliderItem(String title, String description, int value, int max, ValueChanged<int> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            if (description.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(description, style: TextStyle(fontSize: 10, color: Colors.grey.shade700)),
+  Widget _buildSliderItem(String title, int value, ValueChanged<int> onChanged, {String? subtitle}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+          if (subtitle != null) ...[
+             const SizedBox(height: 4),
+             Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          ],
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Nunca (0)', style: TextStyle(fontSize: 11, color: Colors.blueGrey.shade300)),
+              Text('≥3x/sem (3)', style: TextStyle(fontSize: 11, color: Colors.blueGrey.shade300)),
             ],
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('0', style: TextStyle(fontSize: 10)),
-                Text('$value/$max', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                Text('$max', style: const TextStyle(fontSize: 10)),
-              ],
+          ),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: Colors.blueGrey,
+              thumbColor: Colors.blueGrey,
+              overlayColor: Colors.blueGrey.withOpacity(0.1),
+              inactiveTrackColor: Colors.blueGrey.withOpacity(0.1),
+              trackHeight: 4,
             ),
-            Slider(
+            child: Slider(
               value: value.toDouble(),
               min: 0,
-              max: max.toDouble(),
-              divisions: max,
+              max: 3,
+              divisions: 3,
+              label: '$value',
               onChanged: (val) => onChanged(val.toInt()),
-              activeColor: Colors.indigo.shade700,
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNumericInput(String title, TextEditingController controller, ValueChanged<String> onChanged, {String? hint}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+          const SizedBox(height: 8),
+          TextField(
+            controller: controller,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              hintText: hint,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              isDense: true,
+            ),
+            onChanged: onChanged,
+          ),
+        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    _data.calcularComponentes();
+    _data.calcularComponentes(); // Recalculate just in case
     final score = _data.totalScore;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('PSQI'),
-        centerTitle: true,
-        backgroundColor: Colors.indigo.shade700,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            color: Colors.indigo.shade50,
-            child: const Padding(
-              padding: EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Instruções', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 6),
-                  Text(
-                    'Considere seu padrão de sono no último mês. Responda todas as questões.',
-                    style: TextStyle(fontSize: 11),
-                  ),
-                ],
-              ),
+    
+    return CalculatorScaffold(
+      title: 'PSQI',
+      body: [
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Pittsburgh Sleep Quality Index\nConsidere seu padrão de sono no último mês.',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+              textAlign: TextAlign.center,
             ),
           ),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            color: Colors.indigo.shade50,
-            child: const Padding(
-              padding: EdgeInsets.all(8),
-              child: Text('Componente 1: Qualidade Subjetiva do Sono', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+
+          _buildSectionTitle('C1: Qualidade Subjetiva'),
+          _buildSliderItem('Como você avaliaria a qualidade do seu sono?', _data.qualidadeSono, (v) => setState(() => _data.qualidadeSono = v), subtitle: '0=Muito boa, 3=Muito ruim'),
+
+          _buildSectionTitle('C2: Latência do Sono'),
+          _buildNumericInput('Minutos para adormecer:', _tempoAdormecerController, (v) {
+             final min = int.tryParse(v) ?? 0;
+             setState(() => _data.tempoAdormecer = min);
+          }, hint: 'Ex: 30'),
+
+          _buildSectionTitle('C3: Duração do Sono'),
+           _buildNumericInput('Horas de sono por noite:', _horasSonoController, (v) {
+             final horas = double.tryParse(v.replaceAll(',', '.')) ?? 0;
+             setState(() => _data.horasSono = horas.round());
+          }, hint: 'Ex: 7.5'),
+
+          _buildSectionTitle('C4: Eficiência do Sono'),
+           _buildNumericInput('Horas na cama:', _horasCamaController, (v) {
+             final horas = double.tryParse(v.replaceAll(',', '.')) ?? 0;
+             setState(() => _data.horasCama = horas.round());
+          }, hint: 'Ex: 8'),
+
+          _buildSectionTitle('C5: Distúrbios do Sono'),
+          _buildSliderItem('Acordar no meio da noite / madrugada', _data.acordarNoite, (v) => setState(() => _data.acordarNoite = v)),
+          _buildSliderItem('Levantar para ir ao banheiro', _data.irBanheiro, (v) => setState(() => _data.irBanheiro = v)),
+          _buildSliderItem('Dificuldade para respirar', _data.dificuldadeRespirar, (v) => setState(() => _data.dificuldadeRespirar = v)),
+          _buildSliderItem('Tosse ou ronco alto', _data.tosseRonco, (v) => setState(() => _data.tosseRonco = v)),
+          _buildSliderItem('Sentir muito frio', _data.muitoFrio, (v) => setState(() => _data.muitoFrio = v)),
+          _buildSliderItem('Sentir muito calor', _data.muitoQuente, (v) => setState(() => _data.muitoQuente = v)),
+          _buildSliderItem('Ter dores', _data.dor, (v) => setState(() => _data.dor = v)),
+          _buildSliderItem('Outras razões', _data.outros, (v) => setState(() => _data.outros = v)),
+
+          _buildSectionTitle('C6: Medicação'),
+          _buildSliderItem('Uso de remédio para dormir', _data.medicacaoSono, (v) => setState(() => _data.medicacaoSono = v)),
+
+          _buildSectionTitle('C7: Disfunção Diurna'),
+          _buildSliderItem('Dificuldade em manter-se acordado', _data.dificuldadeManterVigil, (v) => setState(() => _data.dificuldadeManterVigil = v)),
+          _buildSliderItem('Dificuldade em ter entusiasmo', _data.entusiasmo, (v) => setState(() => _data.entusiasmo = v)),
+
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: score <= 5 ? Colors.green : score <= 10 ? Colors.orange : Colors.red,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: (score <= 5 ? Colors.green : score <= 10 ? Colors.orange : Colors.red).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('PSQI GLOBAL SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  '$score',
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                const Text('/ 21', style: TextStyle(color: Colors.white70)),
+                 const SizedBox(height: 12),
+                 Text(
+                  _data.interpretation,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
           ),
-          _buildSliderItem(
-            'Como você avaliaria a qualidade do seu sono?',
-            '0: Muito boa | 1: Boa | 2: Ruim | 3: Muito ruim',
-            _data.qualidadeSono,
-            3,
-            (v) => setState(() => _data.qualidadeSono = v),
-          ),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            color: Colors.indigo.shade50,
-            child: const Padding(
-              padding: EdgeInsets.all(8),
-              child: Text('Componente 2: Latência do Sono', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            ),
-          ),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 1,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Quanto tempo (em minutos) você leva para adormecer?', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _tempoAdormecerController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Minutos para adormecer',
-                      hintText: 'Ex: 30',
-                      border: OutlineInputBorder(),
-                    ),
-                    onChanged: (value) {
-                      final min = int.tryParse(value) ?? 0;
-                      setState(() => _data.tempoAdormecer = min);
-                    },
-                  ),
-                  const SizedBox(height: 4),
-                  Text('Pontuação automática: ${_data.latenciaPontuacao}/3', style: TextStyle(fontSize: 10, color: Colors.grey.shade700, fontStyle: FontStyle.italic)),
-                ],
-              ),
-            ),
-          ),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            color: Colors.indigo.shade50,
-            child: const Padding(
-              padding: EdgeInsets.all(8),
-              child: Text('Componente 3: Duração do Sono', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            ),
-          ),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 1,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Quantas horas de sono você tem por noite?', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _horasSonoController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Horas de sono',
-                      hintText: 'Ex: 7.5',
-                      border: OutlineInputBorder(),
-                    ),
-                    onChanged: (value) {
-                      final horas = double.tryParse(value.replaceAll(',', '.')) ?? 0.0;
-                      setState(() => _data.horasSono = horas.round());
-                    },
-                  ),
-                  const SizedBox(height: 4),
-                  Text('Pontuação automática: ${_data.duracaoPontuacao}/3', style: TextStyle(fontSize: 10, color: Colors.grey.shade700, fontStyle: FontStyle.italic)),
-                ],
-              ),
-            ),
-          ),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            color: Colors.indigo.shade50,
-            child: const Padding(
-              padding: EdgeInsets.all(8),
-              child: Text('Componente 4: Eficiência do Sono', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            ),
-          ),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 1,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Quantas horas você passa na cama?', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _horasCamaController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Horas na cama',
-                      hintText: 'Ex: 8',
-                      border: OutlineInputBorder(),
-                    ),
-                    onChanged: (value) {
-                      final horas = double.tryParse(value.replaceAll(',', '.')) ?? 0.0;
-                      setState(() => _data.horasCama = horas.round());
-                    },
-                  ),
-                  const SizedBox(height: 4),
-                  Text('Eficiência = (Horas de sono / Horas na cama) × 100', style: TextStyle(fontSize: 9, color: Colors.grey.shade700)),
-                  Text('Pontuação automática: ${_data.eficienciaPontuacao}/3', style: TextStyle(fontSize: 10, color: Colors.grey.shade700, fontStyle: FontStyle.italic)),
-                ],
-              ),
-            ),
-          ),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            color: Colors.indigo.shade50,
-            child: const Padding(
-              padding: EdgeInsets.all(8),
-              child: Text('Componente 5: Distúrbios do Sono', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            ),
-          ),
-          _buildSliderItem('Acordar no meio da noite ou de madrugada', '0: Nenhuma | 1: ≤1x/semana | 2: 1-2x/semana | 3: ≥3x/semana', _data.acordarNoite, 3, (v) => setState(() => _data.acordarNoite = v)),
-          _buildSliderItem('Levantar para ir ao banheiro', '0: Nenhuma | 1: ≤1x/semana | 2: 1-2x/semana | 3: ≥3x/semana', _data.irBanheiro, 3, (v) => setState(() => _data.irBanheiro = v)),
-          _buildSliderItem('Dificuldade para respirar bem', '0: Nenhuma | 1: ≤1x/semana | 2: 1-2x/semana | 3: ≥3x/semana', _data.dificuldadeRespirar, 3, (v) => setState(() => _data.dificuldadeRespirar = v)),
-          _buildSliderItem('Tosse ou ronco alto', '0: Nenhuma | 1: ≤1x/semana | 2: 1-2x/semana | 3: ≥3x/semana', _data.tosseRonco, 3, (v) => setState(() => _data.tosseRonco = v)),
-          _buildSliderItem('Sensação de muito frio', '0: Nenhuma | 1: ≤1x/semana | 2: 1-2x/semana | 3: ≥3x/semana', _data.muitoFrio, 3, (v) => setState(() => _data.muitoFrio = v)),
-          _buildSliderItem('Sensação de muito calor', '0: Nenhuma | 1: ≤1x/semana | 2: 1-2x/semana | 3: ≥3x/semana', _data.muitoQuente, 3, (v) => setState(() => _data.muitoQuente = v)),
-          _buildSliderItem('Ter dores', '0: Nenhuma | 1: ≤1x/semana | 2: 1-2x/semana | 3: ≥3x/semana', _data.dor, 3, (v) => setState(() => _data.dor = v)),
-          _buildSliderItem('Outros distúrbios do sono', '0: Nenhuma | 1: ≤1x/semana | 2: 1-2x/semana | 3: ≥3x/semana', _data.outros, 3, (v) => setState(() => _data.outros = v)),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            color: Colors.indigo.shade50,
-            child: const Padding(
-              padding: EdgeInsets.all(8),
-              child: Text('Componente 6: Uso de Medicação para Dormir', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            ),
-          ),
-          _buildSliderItem('Quão frequentemente você usa medicação para dormir?', '0: Nenhuma | 1: ≤1x/semana | 2: 1-2x/semana | 3: ≥3x/semana', _data.medicacaoSono, 3, (v) => setState(() => _data.medicacaoSono = v)),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            color: Colors.indigo.shade50,
-            child: const Padding(
-              padding: EdgeInsets.all(8),
-              child: Text('Componente 7: Disfunção Diurna', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            ),
-          ),
-          _buildSliderItem('Dificuldade para manter entusiasmo para fazer coisas', '0: Nenhuma | 1: ≤1x/semana | 2: 1-2x/semana | 3: ≥3x/semana', _data.entusiasmo, 3, (v) => setState(() => _data.entusiasmo = v)),
-          _buildSliderItem('Dificuldade para manter-se acordado(a)', '0: Nenhuma | 1: ≤1x/semana | 2: 1-2x/semana | 3: ≥3x/semana', _data.dificuldadeManterVigil, 3, (v) => setState(() => _data.dificuldadeManterVigil = v)),
-          const SizedBox(height: 16),
-          Card(
-            color: score <= 5 ? Colors.green : score <= 10 ? Colors.orange : Colors.red,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text('PSQI Score', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('$score/21', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('C1: ${_data.qualidadeSono} | C2: ${_data.latenciaPontuacao} | C3: ${_data.duracaoPontuacao} | C4: ${_data.eficienciaPontuacao} | C5: ${_data.disturbanosPontuacao} | C6: ${_data.medicacaoSono} | C7: ${_data.disfuncaoPontuacao}', style: const TextStyle(fontSize: 10, color: Colors.white70)),
-                  const SizedBox(height: 12),
-                  Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: _salvarPSQI,
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala PSQI'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo.shade700, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
-        ],
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarPSQI,
+        backgroundColor: Colors.blueGrey,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
-}
 
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16, bottom: 8, left: 4),
+      child: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+    );
+  }
+}

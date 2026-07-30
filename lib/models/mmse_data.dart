@@ -51,6 +51,9 @@ class MMSEData {
   // Linguagem - Desenho (1 ponto)
   int desenho;
 
+  // Escolaridade para cálculo do score (0: Analfabeto, 1: 1-4 anos, 2: 5-8 anos, 3: 9-11 anos, 4: >11 anos)
+  int educationLevel;
+
   MMSEData({
     this.ano = 0,
     this.estacao = 0,
@@ -82,6 +85,7 @@ class MMSEData {
     this.leitura = 0,
     this.escrita = 0,
     this.desenho = 0,
+    this.educationLevel = 0,
   });
 
   int get totalScore {
@@ -99,14 +103,58 @@ class MMSEData {
   }
 
   String get interpretation {
-    if (totalScore >= 24) {
-      return 'Cognição normal ou comprometimento mínimo';
-    } else if (totalScore >= 18) {
-      return 'Comprometimento cognitivo leve a moderado';
-    } else if (totalScore >= 10) {
-      return 'Comprometimento cognitivo moderado a grave';
+    // Critérios de Brucki et al. (2003)
+    int cutoff;
+    switch (educationLevel) {
+      case 0: // Analfabeto
+        cutoff = 20;
+        break;
+      case 1: // 1-4 anos
+        cutoff = 25;
+        break;
+      case 2: // 5-8 anos
+        cutoff = 26; // Usando 26.5 arredondado para baixo como limite inferior de normalidade? Tabela diz "26,5 pontos". Usaremos 26 como corte (>= 26 ok? ou > 26? Tabela "26,5", então precisa de 27 pra ser normal, ou 26 é comprometido? Se 26.5 é o corte, 26 é abaixo. Vamos assumir >= 27 é normal, < 27 comprometido. Ou melhor, user pediu exatamente a imagem. Imagem: "26,5 pontos para idosos com 5 a 8 anos". Se for 26.5, quem tira 26 tá abaixo.)
+        // Ajuste: Vamos considerar o valor da tabela como o "piso" da normalidade ou a média? "Pontos de corte - MEEM Brucki". Normalmente ponto de corte define o limite.
+        // Brucki 2003 Table usually cites median values. Often cutoff is median - 1SD.  
+        // Mas a imagem diz "Pontos de corte".
+        // Vamos usar: Score < Cutoff => Alterado.
+        // Analfabetos: 20. Score < 20 Alterado. (>= 20 Normal)
+        // 1-4 anos: 25. Score < 25 Alterado. (>= 25 Normal)
+        // 5-8 anos: 26.5. Score < 27 Alterado. (>= 27 Normal)
+        // 9-11 anos: 28. Score < 28 Alterado. (>= 28 Normal)
+        // > 11 anos: 29. Score < 29 Alterado. (>= 29 Normal)
+        cutoff = 27; 
+        break;
+      case 3: // 9-11 anos
+        cutoff = 28;
+        break;
+      case 4: // > 11 anos
+        cutoff = 29;
+        break;
+      default:
+        cutoff = 24;
+    }
+    
+    // Re-adjusting logic based strictly on the image text "20 pontos para analfabetos" -> implies 20 is the target.
+    // Let's assume the value displayed IS the cutoff for NORMALITY.
+    // So Score >= TableValue is Normal.
+    // 0: >= 20
+    // 1: >= 25
+    // 2: >= 26.5 (so 27)
+    // 3: >= 28
+    // 4: >= 29
+    
+    double threshold;
+    if (educationLevel == 2) threshold = 26.5;
+    else if (educationLevel == 0) threshold = 20;
+    else if (educationLevel == 1) threshold = 25;
+    else if (educationLevel == 3) threshold = 28;
+    else threshold = 29;
+
+    if (totalScore >= threshold) {
+      return 'Normal para a escolaridade';
     } else {
-      return 'Comprometimento cognitivo grave';
+      return 'Sinais de comprometimento cognitivo';
     }
   }
 }

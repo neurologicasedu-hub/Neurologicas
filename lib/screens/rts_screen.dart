@@ -3,6 +3,7 @@ import '../models/rts_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
 import '../helpers/auto_save_mixin.dart';
+import '../widgets/calculator_scaffold.dart';
 
 class RTSScreen extends StatefulWidget {
   const RTSScreen({super.key});
@@ -115,110 +116,97 @@ class _RTSScreenState extends State<RTSScreen> with AutoSaveMixin {
     final rts = _data.rts;
     final interpretacao = _data.interpretacao;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Revised Trauma Score (RTS)'),
-        centerTitle: true,
+    return CalculatorScaffold(
+      title: 'Revised Trauma Score',
+      body: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Avaliação inicial de trauma baseada em parâmetros fisiológicos.',
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          
+          _buildNumberInput('Glasgow Coma Scale (3-15)', _gcsController, '', Icons.visibility),
+          _buildNumberInput('Pressão Arterial Sistólica', _pasController, 'mmHg', Icons.speed),
+          _buildNumberInput('Frequência Respiratória', _frController, 'rpm', Icons.air),
+          
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _getScoreColor(rts),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(rts).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('RTS SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  rts.toStringAsFixed(2),
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                const SizedBox(height: 12),
+                 Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                   decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+                   child: Text(
+                      interpretacao,
+                      style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w500),
+                      textAlign: TextAlign.center,
+                    ),
+                 ),
+              ],
+            ),
+          ),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarRTS,
         backgroundColor: Colors.orange,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Revised Trauma Score',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _gcsController,
-            decoration: const InputDecoration(
-              labelText: 'Glasgow Coma Scale (3-15)',
-              hintText: 'Ex: 15',
-              border: OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.number,
-            onChanged: (_) {
-              _updateData();
-              onDataChanged();
-            },
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _pasController,
-            decoration: const InputDecoration(
-              labelText: 'Pressão Arterial Sistólica (mmHg)',
-              hintText: 'Ex: 120',
-              border: OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.number,
-            onChanged: (_) {
-              _updateData();
-              onDataChanged();
-            },
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _frController,
-            decoration: const InputDecoration(
-              labelText: 'Frequência Respiratória (resp/min)',
-              hintText: 'Ex: 20',
-              border: OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.number,
-            onChanged: (_) {
-              _updateData();
-              onDataChanged();
-            },
-          ),
-          const SizedBox(height: 16),
-          Card(
-            color: _getScoreColor(rts),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text('RTS', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text(rts.toStringAsFixed(2), style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(interpretacao, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarRTS();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala RTS'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
+    );
+  }
+
+  Widget _buildNumberInput(String label, TextEditingController ctrl, String suffix, IconData icon) {
+     return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
         ],
+      ),
+      child: TextField(
+        controller: ctrl,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2D3748)),
+        decoration: InputDecoration(
+          labelText: label,
+          suffixText: suffix,
+          icon: Icon(icon, color: Colors.orange),
+          border: InputBorder.none,
+          labelStyle: TextStyle(color: Colors.grey[600], fontSize: 14),
+        ),
+        onChanged: (_) {
+           _updateData();
+           onDataChanged();
+        }
       ),
     );
   }
 
   Color _getScoreColor(double rts) {
-    if (rts >= 10.79) return Colors.green;
-    if (rts >= 7.84) return Colors.lightGreen;
-    if (rts >= 4.09) return Colors.orange;
+    if (rts >= 10) return Colors.green;
+    if (rts >= 7) return Colors.lightGreen;
+    if (rts >= 4) return Colors.orange;
     return Colors.red;
   }
 }
-

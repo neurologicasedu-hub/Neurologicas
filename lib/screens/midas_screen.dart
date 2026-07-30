@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/midas_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
 
 class MIDASScreen extends StatefulWidget {
   const MIDASScreen({super.key});
@@ -72,24 +73,109 @@ class _MIDASScreenState extends State<MIDASScreen> {
     }
   }
 
+  @override
+  Widget build(BuildContext context) {
+    final score = _data.totalScore;
+    return CalculatorScaffold(
+      title: 'MIDAS',
+      body: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Nas últimas 3 meses, quantos dias você teve problemas por causa da enxaqueca?',
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          _buildQuestionItem(0, _questions[0], _controller1, (v) => setState(() => _data.diasEscolaTrabalho = v)),
+          _buildQuestionItem(1, _questions[1], _controller2, (v) => setState(() => _data.diasAtividadesDomesticas = v)),
+          _buildQuestionItem(2, _questions[2], _controller3, (v) => setState(() => _data.diasAtividadesFamiliares = v)),
+          _buildQuestionItem(3, _questions[3], _controller4, (v) => setState(() => _data.diasCompletamenteIncapacitado = v)),
+
+          // Result Card
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _getScoreColor(score),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(score).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('MIDAS SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  '$score',
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                 const Text(
+                  'dias',
+                  style: TextStyle(fontSize: 18, color: Colors.white70),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                   decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                   child: Text(
+                    '${_data.classificacaoMIDAS}\n${_data.interpretation}',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarMIDAS,
+        backgroundColor: Colors.deepPurple,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+
   Widget _buildQuestionItem(int index, String question, TextEditingController controller, ValueChanged<int> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${index + 1}. $question', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
+            Text(
+              '${index + 1}. $question',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2D3748),
+              ),
+            ),
+            const SizedBox(height: 16),
             TextField(
               controller: controller,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              decoration: InputDecoration(
                 labelText: 'Número de dias (0-90)',
                 hintText: 'Ex: 5',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               ),
               onChanged: (value) {
                 final dias = int.tryParse(value) ?? 0;
@@ -104,65 +190,10 @@ class _MIDASScreenState extends State<MIDASScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final score = _data.totalScore;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('MIDAS'),
-        centerTitle: true,
-        backgroundColor: Colors.deepPurple,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'MIDAS - Migraine Disability Assessment\nNas últimas 3 meses, quantos dias você teve problemas por causa da enxaqueca?',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          _buildQuestionItem(0, _questions[0], _controller1, (v) => setState(() => _data.diasEscolaTrabalho = v)),
-          _buildQuestionItem(1, _questions[1], _controller2, (v) => setState(() => _data.diasAtividadesDomesticas = v)),
-          _buildQuestionItem(2, _questions[2], _controller3, (v) => setState(() => _data.diasAtividadesFamiliares = v)),
-          _buildQuestionItem(3, _questions[3], _controller4, (v) => setState(() => _data.diasCompletamenteIncapacitado = v)),
-          const SizedBox(height: 16),
-          Card(
-            color: score <= 5 ? Colors.green : score <= 10 ? Colors.lightGreen : score <= 20 ? Colors.orange : Colors.red,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text('MIDAS Score', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('$score pontos', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text(_data.classificacaoMIDAS, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: _salvarMIDAS,
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala MIDAS'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
-        ],
-      ),
-    );
+  Color _getScoreColor(int score) {
+    if (score <= 5) return Colors.green;
+    if (score <= 10) return Colors.lightGreen;
+    if (score <= 20) return Colors.orange;
+    return Colors.red;
   }
 }
-

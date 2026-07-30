@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/drs_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
 
 class DRSScreen extends StatefulWidget {
   const DRSScreen({super.key});
@@ -40,130 +41,105 @@ class _DRSScreenState extends State<DRSScreen> {
             action: SnackBarAction(
               label: 'Ver Relatório',
               textColor: Colors.white,
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/report');
-              },
+              onPressed: () => Navigator.pushReplacementNamed(context, '/report'),
             ),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao salvar: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red));
       }
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final score = _data.totalScore;
-    final nivel = _data.nivelDeficiencia;
-    final interpretacao = _data.interpretacao;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Disability Rating Scale (DRS)'),
-        centerTitle: true,
-        backgroundColor: Colors.pink,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+  Widget _buildSliderItem(String title, int value, int max, ValueChanged<int> onChanged) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Avaliação de Deficiência (0-29 pontos)',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          _buildSliderItem('Abertura Ocular (0-3)', _data.aberturaOcular, 3, (val) => setState(() => _data.aberturaOcular = val)),
-          _buildSliderItem('Resposta Verbal (0-4)', _data.respostaVerbal, 4, (val) => setState(() => _data.respostaVerbal = val)),
-          _buildSliderItem('Resposta Motora (0-5)', _data.respostaMotora, 5, (val) => setState(() => _data.respostaMotora = val)),
-          _buildSliderItem('Alimentação/Comunicação/Higiene (0-3)', _data.alimentacaoComunicacaoHigiene, 3, (val) => setState(() => _data.alimentacaoComunicacaoHigiene = val)),
-          _buildSliderItem('Funcionalidade (0-5)', _data.funcionalidade, 5, (val) => setState(() => _data.funcionalidade = val)),
-          _buildSliderItem('Empregabilidade (0-3)', _data.empregabilidade, 3, (val) => setState(() => _data.empregabilidade = val)),
-          const SizedBox(height: 16),
-          Card(
-            color: _getScoreColor(score),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text('Pontuação Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('$score/29', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(nivel, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                  const SizedBox(height: 8),
-                  Text(interpretacao, style: const TextStyle(fontSize: 13, color: Colors.white70), textAlign: TextAlign.center),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarDRS();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala DRS'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.pink, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
+           Row(
+             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+             children: [
+               Expanded(child: Text(title, style: const TextStyle(fontSize: 14))),
+               Text('$value/$max', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.pink.shade700)),
+             ],
+           ),
+           SliderTheme(
+             data: SliderTheme.of(context).copyWith(activeTrackColor: Colors.pink, thumbColor: Colors.pink),
+             child: Slider(
+               value: value.toDouble(),
+               min: 0, max: max.toDouble(), divisions: max,
+               onChanged: (val) => onChanged(val.toInt()),
+             ),
+           ),
         ],
       ),
     );
   }
 
-  Widget _buildSliderItem(String title, int value, int max, ValueChanged<int> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(child: Text(title, style: const TextStyle(fontSize: 12))),
-                Text('$value/$max', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+  @override
+  Widget build(BuildContext context) {
+    final score = _data.totalScore;
+    return CalculatorScaffold(
+      title: 'DRS - Disability Rating Scale',
+      body: [
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Avaliação de Deficiência e Recuperação (0-29)',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  _buildSliderItem('Abertura Ocular (0-3)', _data.aberturaOcular, 3, (val) => setState(() => _data.aberturaOcular = val)),
+                  _buildSliderItem('Resposta Verbal (0-4)', _data.respostaVerbal, 4, (val) => setState(() => _data.respostaVerbal = val)),
+                  _buildSliderItem('Resposta Motora (0-5)', _data.respostaMotora, 5, (val) => setState(() => _data.respostaMotora = val)),
+                  _buildSliderItem('Autocuidado (0-3)', _data.alimentacaoComunicacaoHigiene, 3, (val) => setState(() => _data.alimentacaoComunicacaoHigiene = val)),
+                  _buildSliderItem('Funcionalidade (0-5)', _data.funcionalidade, 5, (val) => setState(() => _data.funcionalidade = val)),
+                  _buildSliderItem('Empregabilidade (0-3)', _data.empregabilidade, 3, (val) => setState(() => _data.empregabilidade = val)),
+                ],
+              ),
+            ),
+          ),
+
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: score <= 5 ? Colors.green : score <= 15 ? Colors.orange : Colors.red,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: (score <= 5 ? Colors.green : score <= 15 ? Colors.orange : Colors.red).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
               ],
             ),
-            Slider(
-              value: value.toDouble(),
-              min: 0,
-              max: max.toDouble(),
-              divisions: max,
-              onChanged: (val) => onChanged(val.toInt()),
-              activeColor: Colors.pink,
+            child: Column(
+              children: [
+                const Text('DRS SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                 const SizedBox(height: 8),
+                Text('$score', style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1)),
+                const SizedBox(height: 12),
+                Text(_data.nivelDeficiencia, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white), textAlign: TextAlign.center),
+                const SizedBox(height: 8),
+                Text(_data.interpretacao, style: const TextStyle(fontSize: 12, color: Colors.white70), textAlign: TextAlign.center),
+              ],
             ),
-          ],
-        ),
+          ),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarDRS,
+        backgroundColor: Colors.pink,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
-
-  Color _getScoreColor(int score) {
-    if (score <= 5) return Colors.green;
-    if (score <= 15) return Colors.orange;
-    return Colors.red;
-  }
 }
-

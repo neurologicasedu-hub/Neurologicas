@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/nmss_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
 
 class NMSSScreen extends StatefulWidget {
   const NMSSScreen({super.key});
@@ -43,9 +44,7 @@ class _NMSSScreenState extends State<NMSSScreen> {
             action: SnackBarAction(
               label: 'Ver Relatório',
               textColor: Colors.white,
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/report');
-              },
+              onPressed: () => Navigator.pushReplacementNamed(context, '/report'),
             ),
           ),
         );
@@ -53,112 +52,93 @@ class _NMSSScreenState extends State<NMSSScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao salvar: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Erro ao salvar: $e'), backgroundColor: Colors.red),
         );
       }
     }
   }
 
   Widget _buildItemSlider(String title, NMSSItem item, ValueChanged<NMSSItem> onChanged) {
-    final score = item.score;
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Expanded(
-                  child: Text('Frequência:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                ),
-                Text(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          
+          // Frequency Slider
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Frequência: ${item.frequencia}/4', style: const TextStyle(fontSize: 12)),
+              Text(
                   item.frequencia == 1 ? 'Nunca' : 
                   item.frequencia == 2 ? 'Raramente' : 
-                  item.frequencia == 3 ? 'Às vezes' : 'Frequentemente',
-                  style: const TextStyle(fontSize: 12),
-                ),
-                const SizedBox(width: 8),
-                Text('${item.frequencia}/4', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-              ],
-            ),
-            Slider(
+                  item.frequencia == 3 ? 'Às vezes' : 'Sempre',
+                  style: TextStyle(fontSize: 12, color: Colors.blue.shade700, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(activeTrackColor: Colors.blue.shade300, thumbColor: Colors.blue.shade300, trackHeight: 3),
+            child: Slider(
               value: item.frequencia.toDouble(),
-              min: 1,
-              max: 4,
-              divisions: 3,
-              label: item.frequencia == 1 ? 'Nunca' : 
-                     item.frequencia == 2 ? 'Raramente' : 
-                     item.frequencia == 3 ? 'Às vezes' : 'Frequentemente',
-              onChanged: (val) {
-                final novoItem = NMSSItem(frequencia: val.toInt(), severidade: item.severidade);
-                onChanged(novoItem);
-              },
-              activeColor: Colors.lightBlue.shade300,
+              min: 1, max: 4, divisions: 3,
+              onChanged: (val) => onChanged(NMSSItem(frequencia: val.toInt(), severidade: item.severidade)),
             ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Expanded(
-                  child: Text('Severidade:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                ),
-                Text(
+          ),
+
+          // Severity Slider
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+               Text('Severidade: ${item.severidade}/3', style: const TextStyle(fontSize: 12)),
+               Text(
                   item.severidade == 0 ? 'Nenhuma' : 
                   item.severidade == 1 ? 'Leve' : 
                   item.severidade == 2 ? 'Moderada' : 'Grave',
-                  style: const TextStyle(fontSize: 12),
-                ),
-                const SizedBox(width: 8),
-                Text('${item.severidade}/3', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-              ],
-            ),
-            Slider(
+                  style: TextStyle(fontSize: 12, color: Colors.blue.shade900, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(activeTrackColor: Colors.blue.shade700, thumbColor: Colors.blue.shade700, trackHeight: 3),
+            child: Slider(
               value: item.severidade.toDouble(),
-              min: 0,
-              max: 3,
-              divisions: 3,
-              label: item.severidade == 0 ? 'Nenhuma' : 
-                     item.severidade == 1 ? 'Leve' : 
-                     item.severidade == 2 ? 'Moderada' : 'Grave',
-              onChanged: (val) {
-                final novoItem = NMSSItem(frequencia: item.frequencia, severidade: val.toInt());
-                onChanged(novoItem);
-              },
-              activeColor: Colors.lightBlue.shade600,
+              min: 0, max: 3, divisions: 3,
+              onChanged: (val) => onChanged(NMSSItem(frequencia: item.frequencia, severidade: val.toInt())),
             ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.lightBlue.shade50,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Score: Frequência × Severidade =', style: TextStyle(fontSize: 12)),
-                  Text(
-                    '$score',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.lightBlue.shade900,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text('Score: ${item.score}', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey.shade600)),
+          ),
+          const Divider(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSection(String title, int score, List<Widget> children) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+        trailing: Container(
+             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+             decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8)),
+             child: Text('Score: $score', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.blue.shade900)),
         ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(children: children),
+          ),
+        ],
       ),
     );
   }
@@ -166,179 +146,100 @@ class _NMSSScreenState extends State<NMSSScreen> {
   @override
   Widget build(BuildContext context) {
     final score = _data.totalScore;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('NMSS - Non-Motor Symptoms Scale'),
-        centerTitle: true,
-        backgroundColor: Colors.lightBlue,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'NMSS - Escala de Sintomas Não Motores (30 itens, 9 domínios)',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
+    return CalculatorScaffold(
+      title: 'NMSS',
+      body: [
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Non-Motor Symptoms Scale\nScore = Frequência x Severidade',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+              textAlign: TextAlign.center,
+            ),
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'Para cada item: Frequência (1-4) × Severidade (0-3) = Score 0-12',
-            style: TextStyle(fontSize: 11, color: Colors.grey),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 1,
-            child: ExpansionTile(
-              title: Text('Cardiovascular (Score: ${_data.scoreCardiovascular}/12)', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+
+          _buildSection('Cardiovascular', _data.scoreCardiovascular, [
+             _buildItemSlider('Tontura/Déficit', _data.cardiovascular, (v) => setState(() => _data.cardiovascular = v)),
+          ]),
+          _buildSection('Sono/Fadiga', _data.scoreSonoFadiga, [
+             _buildItemSlider('Insônia', _data.sonoInsonia, (v) => setState(() => _data.sonoInsonia = v)),
+             _buildItemSlider('Sonolência', _data.sonoSonolencia, (v) => setState(() => _data.sonoSonolencia = v)),
+             _buildItemSlider('Pernas Inquietas', _data.sonoRls, (v) => setState(() => _data.sonoRls = v)),
+             _buildItemSlider('Fadiga', _data.fadiga, (v) => setState(() => _data.fadiga = v)),
+          ]),
+          _buildSection('Humor/Cognição', _data.scoreHumorCognicao, [
+             _buildItemSlider('Interesse', _data.interesseMotivacao, (v) => setState(() => _data.interesseMotivacao = v)),
+             _buildItemSlider('Prazer', _data.prazer, (v) => setState(() => _data.prazer = v)),
+             _buildItemSlider('Depressão', _data.depressao, (v) => setState(() => _data.depressao = v)),
+             _buildItemSlider('Ansiedade', _data.ansiedade, (v) => setState(() => _data.ansiedade = v)),
+             _buildItemSlider('Delusão', _data.delusao, (v) => setState(() => _data.delusao = v)),
+             _buildItemSlider('Alucinação', _data.alucinacao, (v) => setState(() => _data.alucinacao = v)),
+          ]),
+          _buildSection('Percepção', _data.scorePercepcao, [
+             _buildItemSlider('Visão', _data.visao, (v) => setState(() => _data.visao = v)),
+             _buildItemSlider('Alucinação', _data.delusaoAlucinacao, (v) => setState(() => _data.delusaoAlucinacao = v)),
+          ]),
+          _buildSection('Atenção/Memória', _data.scoreAtencaoMemoria, [
+             _buildItemSlider('Concentração', _data.concentracao, (v) => setState(() => _data.concentracao = v)),
+             _buildItemSlider('Memória', _data.memoria, (v) => setState(() => _data.memoria = v)),
+             _buildItemSlider('Esquecimento', _data.esquecimento, (v) => setState(() => _data.esquecimento = v)),
+          ]),
+          _buildSection('Gastrointestinal', _data.scoreGastrointestinal, [
+             _buildItemSlider('Salivação', _data.salivacao, (v) => setState(() => _data.salivacao = v)),
+             _buildItemSlider('Deglutição', _data.degluticao, (v) => setState(() => _data.degluticao = v)),
+             _buildItemSlider('Náusea', _data.nausea, (v) => setState(() => _data.nausea = v)),
+          ]),
+          _buildSection('Urinário', _data.scoreUrinario, [
+             _buildItemSlider('Frequência', _data.urinaFrequencia, (v) => setState(() => _data.urinaFrequencia = v)),
+             _buildItemSlider('Noctúria', _data.urinaNocturia, (v) => setState(() => _data.urinaNocturia = v)),
+             _buildItemSlider('Incontinência', _data.urinaIncontinencia, (v) => setState(() => _data.urinaIncontinencia = v)),
+          ]),
+          _buildSection('Sexual', _data.scoreSexual, [
+             _buildItemSlider('Interesse', _data.sexualInteresse, (v) => setState(() => _data.sexualInteresse = v)),
+             _buildItemSlider('Disfunção', _data.sexualDisfuncao, (v) => setState(() => _data.sexualDisfuncao = v)),
+          ]),
+          _buildSection('Miscelânea', _data.scoreMiscelanea, [
+             _buildItemSlider('Dor', _data.dor, (v) => setState(() => _data.dor = v)),
+             _buildItemSlider('Olfato', _data.perdaOlfato, (v) => setState(() => _data.perdaOlfato = v)),
+             _buildItemSlider('Peso', _data.peso, (v) => setState(() => _data.peso = v)),
+             _buildItemSlider('Suor', _data.suor, (v) => setState(() => _data.suor = v)),
+             _buildItemSlider('Quedas', _data.quedas, (v) => setState(() => _data.quedas = v)),
+             _buildItemSlider('Sialorreia', _data.sialorreia, (v) => setState(() => _data.sialorreia = v)),
+          ]),
+
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: score <= 20 ? Colors.green : score <= 40 ? Colors.orange : Colors.red,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: (score <= 20 ? Colors.green : score <= 40 ? Colors.orange : Colors.red).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
               children: [
-                _buildItemSlider('Tontura/Déficit cardiovascular', _data.cardiovascular, (item) => setState(() => _data.cardiovascular = item)),
+                const Text('NMSS SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  '$score',
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                 const SizedBox(height: 12),
+                 Text(
+                  _data.interpretation,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
               ],
             ),
           ),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 1,
-            child: ExpansionTile(
-              title: Text('Sono/Fadiga (Score: ${_data.scoreSonoFadiga}/48)', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-              children: [
-                _buildItemSlider('Insônia', _data.sonoInsonia, (item) => setState(() => _data.sonoInsonia = item)),
-                _buildItemSlider('Sonolência Diurna', _data.sonoSonolencia, (item) => setState(() => _data.sonoSonolencia = item)),
-                _buildItemSlider('Síndrome das Pernas Inquietas', _data.sonoRls, (item) => setState(() => _data.sonoRls = item)),
-                _buildItemSlider('Fadiga', _data.fadiga, (item) => setState(() => _data.fadiga = item)),
-              ],
-            ),
-          ),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 1,
-            child: ExpansionTile(
-              title: Text('Humor/Cognição (Score: ${_data.scoreHumorCognicao}/72)', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-              children: [
-                _buildItemSlider('Interesse/Motivação', _data.interesseMotivacao, (item) => setState(() => _data.interesseMotivacao = item)),
-                _buildItemSlider('Prazer', _data.prazer, (item) => setState(() => _data.prazer = item)),
-                _buildItemSlider('Depressão', _data.depressao, (item) => setState(() => _data.depressao = item)),
-                _buildItemSlider('Ansiedade', _data.ansiedade, (item) => setState(() => _data.ansiedade = item)),
-                _buildItemSlider('Delusão', _data.delusao, (item) => setState(() => _data.delusao = item)),
-                _buildItemSlider('Alucinação', _data.alucinacao, (item) => setState(() => _data.alucinacao = item)),
-              ],
-            ),
-          ),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 1,
-            child: ExpansionTile(
-              title: Text('Percepção (Score: ${_data.scorePercepcao}/24)', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-              children: [
-                _buildItemSlider('Visão', _data.visao, (item) => setState(() => _data.visao = item)),
-                _buildItemSlider('Delusão/Alucinação', _data.delusaoAlucinacao, (item) => setState(() => _data.delusaoAlucinacao = item)),
-              ],
-            ),
-          ),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 1,
-            child: ExpansionTile(
-              title: Text('Atenção/Memória (Score: ${_data.scoreAtencaoMemoria}/36)', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-              children: [
-                _buildItemSlider('Concentração', _data.concentracao, (item) => setState(() => _data.concentracao = item)),
-                _buildItemSlider('Memória', _data.memoria, (item) => setState(() => _data.memoria = item)),
-                _buildItemSlider('Esquecimento', _data.esquecimento, (item) => setState(() => _data.esquecimento = item)),
-              ],
-            ),
-          ),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 1,
-            child: ExpansionTile(
-              title: Text('Gastrointestinal (Score: ${_data.scoreGastrointestinal}/36)', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-              children: [
-                _buildItemSlider('Salivação', _data.salivacao, (item) => setState(() => _data.salivacao = item)),
-                _buildItemSlider('Deglutição', _data.degluticao, (item) => setState(() => _data.degluticao = item)),
-                _buildItemSlider('Náusea', _data.nausea, (item) => setState(() => _data.nausea = item)),
-              ],
-            ),
-          ),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 1,
-            child: ExpansionTile(
-              title: Text('Urinário (Score: ${_data.scoreUrinario}/36)', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-              children: [
-                _buildItemSlider('Frequência Urinária', _data.urinaFrequencia, (item) => setState(() => _data.urinaFrequencia = item)),
-                _buildItemSlider('Noctúria', _data.urinaNocturia, (item) => setState(() => _data.urinaNocturia = item)),
-                _buildItemSlider('Incontinência', _data.urinaIncontinencia, (item) => setState(() => _data.urinaIncontinencia = item)),
-              ],
-            ),
-          ),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 1,
-            child: ExpansionTile(
-              title: Text('Sexual (Score: ${_data.scoreSexual}/24)', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-              children: [
-                _buildItemSlider('Interesse Sexual', _data.sexualInteresse, (item) => setState(() => _data.sexualInteresse = item)),
-                _buildItemSlider('Disfunção Sexual', _data.sexualDisfuncao, (item) => setState(() => _data.sexualDisfuncao = item)),
-              ],
-            ),
-          ),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 1,
-            child: ExpansionTile(
-              title: Text('Miscelânea (Score: ${_data.scoreMiscelanea}/72)', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-              children: [
-                _buildItemSlider('Dor', _data.dor, (item) => setState(() => _data.dor = item)),
-                _buildItemSlider('Perda de Olfato', _data.perdaOlfato, (item) => setState(() => _data.perdaOlfato = item)),
-                _buildItemSlider('Peso', _data.peso, (item) => setState(() => _data.peso = item)),
-                _buildItemSlider('Suor', _data.suor, (item) => setState(() => _data.suor = item)),
-                _buildItemSlider('Quedas', _data.quedas, (item) => setState(() => _data.quedas = item)),
-                _buildItemSlider('Sialorreia', _data.sialorreia, (item) => setState(() => _data.sialorreia = item)),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            color: score <= 20 ? Colors.green : score <= 40 ? Colors.orange : Colors.red,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Text('NMSS Total: $score', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarNMSS();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala NMSS'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.lightBlue,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-        ],
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarNMSS,
+        backgroundColor: Colors.blue,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }

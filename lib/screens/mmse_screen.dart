@@ -3,6 +3,8 @@ import '../models/mmse_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
 import '../helpers/auto_save_mixin.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class MMSEScreen extends StatefulWidget {
   const MMSEScreen({super.key});
@@ -20,6 +22,7 @@ class _MMSEScreenState extends State<MMSEScreen> with AutoSaveMixin {
   @override
   Map<String, dynamic> getDataToSave() {
     return {
+      'educationLevel': _data.educationLevel,
       'ano': _data.ano,
       'estacao': _data.estacao,
       'mes': _data.mes,
@@ -55,6 +58,7 @@ class _MMSEScreenState extends State<MMSEScreen> with AutoSaveMixin {
 
   @override
   Future<void> restoreData(Map<String, dynamic> data) async {
+    _data.educationLevel = data['educationLevel'] ?? 0;
     _data.ano = data['ano'] ?? 0;
     _data.estacao = data['estacao'] ?? 0;
     _data.mes = data['mes'] ?? 0;
@@ -118,18 +122,38 @@ class _MMSEScreenState extends State<MMSEScreen> with AutoSaveMixin {
       clearTemporaryData();
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Escala MMSE salva com sucesso!'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
-            action: SnackBarAction(
-              label: 'Ver Relatório',
-              textColor: Colors.white,
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/report');
-              },
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green),
+                SizedBox(width: 8),
+                Text('Sucesso!'),
+              ],
             ),
+            content: const Text(
+              'A avaliação MMSE foi salva com sucesso no histórico do paciente.',
+              style: TextStyle(fontSize: 16),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // Fecha o dialog
+                },
+                child: const Text('Continuar Avaliando'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  Navigator.pop(context); // Fecha o dialog
+                  Navigator.pushReplacementNamed(context, '/report');
+                },
+                style: FilledButton.styleFrom(backgroundColor: const Color(0xFF00509D)),
+                child: const Text('Ver Relatório'),
+              ),
+            ],
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
         );
       }
@@ -145,248 +169,325 @@ class _MMSEScreenState extends State<MMSEScreen> with AutoSaveMixin {
     }
   }
 
-  Widget _buildInstructionCard(String title, String instruction) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      color: Colors.blue.shade50,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+  @override
+  Widget build(BuildContext context) {
+    return CalculatorScaffold(
+      title: 'Mini-Mental (MMSE)',
+      body: [
+
+          Container(
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: 24),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.blue.shade100),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline, size: 18, color: Colors.blue.shade800),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
+                Row(
+                  children: [
+                    Icon(Icons.school, color: Colors.blue.shade800),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Escolaridade (Brucki et al. 2003)',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<int>(
+                  value: _data.educationLevel,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 0, child: Text('Analfabeto')),
+                    DropdownMenuItem(value: 1, child: Text('1 a 4 anos')),
+                    DropdownMenuItem(value: 2, child: Text('5 a 8 anos')),
+                    DropdownMenuItem(value: 3, child: Text('9 a 11 anos')),
+                    DropdownMenuItem(value: 4, child: Text('Mais de 11 anos')),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                         _data.educationLevel = value;
+                         onDataChanged();
+                      });
+                    }
+                  },
                 ),
               ],
             ),
-            const SizedBox(height: 6),
-            Text(
-              instruction,
-              style: TextStyle(fontSize: 11, color: Colors.blue.shade900),
+          ),
+
+          _buildSectionHeader('1. Orientação Temporal (5 pontos)'),
+          _buildGroupCard(
+            title: "Pergunte ao paciente:",
+            subtitle: "Marque as respostas corretas.",
+            children: [
+               _buildSwitchTile('Dia da semana', _data.diaSemana == 1, (v) => setState(() { _data.diaSemana = v ? 1 : 0; onDataChanged(); })),
+               _buildSwitchTile('Dia do mês', _data.dia == 1, (v) => setState(() { _data.dia = v ? 1 : 0; onDataChanged(); })),
+               _buildSwitchTile('Mês', _data.mes == 1, (v) => setState(() { _data.mes = v ? 1 : 0; onDataChanged(); })),
+               _buildSwitchTile('Ano', _data.ano == 1, (v) => setState(() { _data.ano = v ? 1 : 0; onDataChanged(); })),
+               _buildSwitchTile('Hora aproximada', _data.estacao == 1, (v) => setState(() { _data.estacao = v ? 1 : 0; onDataChanged(); })),
+            ]
+          ),
+
+          _buildSectionHeader('2. Orientação Espacial (5 pontos)'),
+          _buildGroupCard(
+            title: "Onde estamos?",
+            subtitle: "Aceite nomes comuns do local.",
+            children: [
+               _buildSwitchTile('Local', _data.hospital == 1, (v) => setState(() { _data.hospital = v ? 1 : 0; onDataChanged(); })),
+               _buildSwitchTile('Instituição (casa, rua)', _data.andar == 1, (v) => setState(() { _data.andar = v ? 1 : 0; onDataChanged(); })),
+               _buildSwitchTile('Bairro', _data.cidade == 1, (v) => setState(() { _data.cidade = v ? 1 : 0; onDataChanged(); })),
+               _buildSwitchTile('Cidade', _data.estado == 1, (v) => setState(() { _data.estado = v ? 1 : 0; onDataChanged(); })),
+               _buildSwitchTile('Estado', _data.pais == 1, (v) => setState(() { _data.pais = v ? 1 : 0; onDataChanged(); })),
+            ]
+          ),
+
+          _buildSectionHeader('3. Registro (3 pontos)'),
+          _buildGroupCard(
+             title: 'Repetição de Palavras',
+             subtitle: 'Diga: "VASO, CARRO, TIJOLO". Peça para repetir.',
+             children: [
+               _buildSwitchTile('Vaso', _data.palavra1 == 1, (v) => setState(() { _data.palavra1 = v ? 1 : 0; onDataChanged(); })),
+               _buildSwitchTile('Carro', _data.palavra2 == 1, (v) => setState(() { _data.palavra2 = v ? 1 : 0; onDataChanged(); })),
+               _buildSwitchTile('Tijolo', _data.palavra3 == 1, (v) => setState(() { _data.palavra3 = v ? 1 : 0; onDataChanged(); })),
+             ]
+          ),
+
+          _buildSectionHeader('4. Atenção e Cálculo (5 pontos)'),
+          _buildGroupCard(
+             title: 'Subtração Serial (100 - 7)',
+             subtitle: '100 - 7 = 93 ... continue subtraindo 7.',
+             children: [
+               _buildSwitchTile('93', _data.subtracao1 == 1, (v) => setState(() { _data.subtracao1 = v ? 1 : 0; onDataChanged(); })),
+               _buildSwitchTile('86', _data.subtracao2 == 1, (v) => setState(() { _data.subtracao2 = v ? 1 : 0; onDataChanged(); })),
+               _buildSwitchTile('79', _data.subtracao3 == 1, (v) => setState(() { _data.subtracao3 = v ? 1 : 0; onDataChanged(); })),
+               _buildSwitchTile('72', _data.subtracao4 == 1, (v) => setState(() { _data.subtracao4 = v ? 1 : 0; onDataChanged(); })),
+               _buildSwitchTile('65', _data.subtracao5 == 1, (v) => setState(() { _data.subtracao5 = v ? 1 : 0; onDataChanged(); })),
+             ]
+          ),
+
+          _buildSectionHeader('5. Recordação (3 pontos)'),
+          _buildGroupCard(
+             title: 'Evocação das Palavras',
+             subtitle: '"Quais eram as 3 palavras aprendidas?"',
+             children: [
+               _buildSwitchTile('Vaso', _data.recordacao1 == 1, (v) => setState(() { _data.recordacao1 = v ? 1 : 0; onDataChanged(); })),
+               _buildSwitchTile('Carro', _data.recordacao2 == 1, (v) => setState(() { _data.recordacao2 = v ? 1 : 0; onDataChanged(); })),
+               _buildSwitchTile('Tijolo', _data.recordacao3 == 1, (v) => setState(() { _data.recordacao3 = v ? 1 : 0; onDataChanged(); })),
+             ]
+          ),
+
+          _buildSectionHeader('6. Linguagem (Nomeação)'),
+          QuestionCard<int>(
+             title: "Nomeação de Objetos",
+             subtitle: "Mostre os objetos e pergunte o nome.",
+             value: -1,
+             content: Column(
+               children: [
+                 _buildSwitchTile('Lápis', _data.lapis == 1, (v) => setState(() { _data.lapis = v ? 1 : 0; onDataChanged(); })),
+                 _buildSwitchTile('Relógio', _data.relogio == 1, (v) => setState(() { _data.relogio = v ? 1 : 0; onDataChanged(); })),
+               ],
+             ),
+             options: const [], onChanged: (_) {}
+          ),
+
+          _buildSectionHeader('7. Linguagem (Outros)'),
+          _buildGroupCard(
+             title: 'Comandos Verbais e Escritos',
+             children: [
+               _buildSwitchTile('Repetição ("Nem aqui, nem ali, nem lá")', _data.repeticao == 1, (v) => setState(() { _data.repeticao = v ? 1 : 0; onDataChanged(); })),
+               
+               const SizedBox(height: 12),
+               InkWell(
+                 onTap: () {
+                   showDialog(
+                     context: context,
+                     builder: (context) => Dialog(
+                       child: Container(
+                         padding: const EdgeInsets.all(32),
+                         child: const Text(
+                           "FECHE OS OLHOS",
+                           style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+                           textAlign: TextAlign.center,
+                         ),
+                       ),
+                     ),
+                   );
+                 },
+                 child: Container(
+                   padding: const EdgeInsets.all(12),
+                   decoration: BoxDecoration(
+                     color: Colors.blue.shade50,
+                     borderRadius: BorderRadius.circular(8),
+                     border: Border.all(color: Colors.blue),
+                   ),
+                   child: const Row(
+                     mainAxisAlignment: MainAxisAlignment.center,
+                     children: [
+                       Icon(Icons.visibility_off, color: Colors.blue),
+                       SizedBox(width: 8),
+                       Text("Mostrar comando: FECHE OS OLHOS", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+                     ],
+                   ),
+                 ),
+               ),
+               _buildSwitchTile('Paciente obedeceu ("Feche os olhos")', _data.leitura == 1, (v) => setState(() { _data.leitura = v ? 1 : 0; onDataChanged(); })),
+               const Divider(),
+
+               _buildSwitchTile('Comando: Pegar papel c/ mão direita', _data.comando1 == 1, (v) => setState(() { _data.comando1 = v ? 1 : 0; onDataChanged(); })),
+               _buildSwitchTile('Comando: Dobrar ao meio', _data.comando2 == 1, (v) => setState(() { _data.comando2 = v ? 1 : 0; onDataChanged(); })),
+               _buildSwitchTile('Comando: Colocar no chão (ou mesa)', _data.comando3 == 1, (v) => setState(() { _data.comando3 = v ? 1 : 0; onDataChanged(); })),
+               _buildSwitchTile('Escrita (Frase completa)', _data.escrita == 1, (v) => setState(() { _data.escrita = v ? 1 : 0; onDataChanged(); })),
+               
+               const SizedBox(height: 12),
+               GestureDetector(
+                 onTap: () {
+                    showDialog(
+                     context: context,
+                     builder: (context) => Dialog(
+                       child: InteractiveViewer(
+                         minScale: 1.0,
+                         maxScale: 4.0,
+                         child: Image.asset('assets/images/pentagonos.png'),
+                       ),
+                     ),
+                   );
+                 },
+                 child: Center(
+                   child: Container(
+                     decoration: BoxDecoration(
+                       border: Border.all(color: Colors.grey.shade300),
+                       borderRadius: BorderRadius.circular(8)
+                     ),
+                     child: Image.asset('assets/images/pentagonos.png', height: 100)
+                   )
+                 ),
+               ),
+               const SizedBox(height: 4),
+               const Center(child: Text("(Toque na imagem para ampliar)", style: TextStyle(fontSize: 12, color: Colors.grey))),
+               const SizedBox(height: 8),
+
+               _buildSwitchTile('Desenho (Copiar pentágonos)', _data.desenho == 1, (v) => setState(() { _data.desenho = v ? 1 : 0; onDataChanged(); })),
+             ]
+          ),
+
+           // Result Container
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _getScoreColor(_data.totalScore),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(_data.totalScore).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
             ),
-          ],
+            child: Column(
+              children: [
+                const Text('PONTUAÇÃO TOTAL', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  '${_data.totalScore}',
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                const Text(
+                  '/ 30',
+                  style: TextStyle(fontSize: 18, color: Colors.white70),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                   decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                   child: Text(
+                    _data.interpretation,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarMMSE,
+        backgroundColor: _getScoreColor(_data.totalScore),
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, bottom: 12, top: 8),
+      child: Text(
+        title.toUpperCase(),
+        style: const TextStyle(
+          color: Color(0xFF00509D),
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+          letterSpacing: 1.0,
         ),
       ),
     );
   }
 
-  Widget _buildCheckboxItem(String title, int value, ValueChanged<int> onChanged, {String? instruction}) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (instruction != null) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-              child: Text(
-                instruction,
-                style: TextStyle(fontSize: 10, color: Colors.grey.shade700, fontStyle: FontStyle.italic),
-              ),
-            ),
+  Widget _buildGroupCard({required String title, String? subtitle, required List<Widget> children}) {
+     return Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
           ],
-          CheckboxListTile(
-            title: Text(title, style: const TextStyle(fontSize: 13)),
-            value: value == 1,
-            onChanged: (val) {
-              onChanged(val == true ? 1 : 0);
-              onDataChanged();
-            },
-            activeColor: Colors.blue,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRadioItem(String title, int value, List<String> options, ValueChanged<int> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
+        ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            ...options.asMap().entries.map((entry) => RadioListTile<int>(
-              title: Text(entry.value, style: const TextStyle(fontSize: 12)),
-              value: entry.key,
-              groupValue: value,
-              onChanged: (val) {
-                onChanged(val ?? 0);
-                onDataChanged();
-              },
-              activeColor: Colors.blue,
-              dense: true,
-            )),
-          ],
+           crossAxisAlignment: CrossAxisAlignment.start,
+           children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              if (subtitle != null) ...[
+                 const SizedBox(height: 4),
+                 Text(subtitle, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+              ],
+              const SizedBox(height: 12),
+              ...children,
+           ],
         ),
+     );
+  }
+
+  Widget _buildSwitchTile(String title, bool value, ValueChanged<bool> onChanged) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: value ? const Color(0xFF00A896).withOpacity(0.1) : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: value ? const Color(0xFF00A896) : Colors.grey.withOpacity(0.2)),
+      ),
+      child: SwitchListTile(
+        title: Text(title, style: TextStyle(fontSize: 14, fontWeight: value ? FontWeight.bold : FontWeight.normal)),
+        value: value,
+        onChanged: onChanged,
+        activeColor: const Color(0xFF00A896),
+        dense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final score = _data.totalScore;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mini-Mental State Examination (MMSE)'),
-        centerTitle: true,
-        backgroundColor: Colors.blue,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'MMSE - Avaliação Cognitiva (0-30 pontos)',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            color: Colors.blue.shade100,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Instruções Gerais',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '• Aplique as questões na ordem apresentada\n• Marque apenas quando o paciente responder CORRETAMENTE\n• Não dê pistas ou ajuda durante a avaliação\n• Se o paciente não souber uma resposta, marque como incorreto (não marque o checkbox)',
-                    style: TextStyle(fontSize: 11, color: Colors.blue.shade900),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const Text('1. Orientação Temporal (5 pontos)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-          _buildInstructionCard(
-            'Instrução',
-            'Faça as seguintes perguntas ao paciente. Marque apenas se a resposta estiver CORRETA. Não corrija erros.',
-          ),
-          _buildCheckboxItem('Ano', _data.ano, (val) => setState(() => _data.ano = val), instruction: 'Pergunte: "Que ano é este?"'),
-          _buildCheckboxItem('Estação', _data.estacao, (val) => setState(() => _data.estacao = val), instruction: 'Pergunte: "Que estação do ano é esta?"'),
-          _buildCheckboxItem('Mês', _data.mes, (val) => setState(() => _data.mes = val), instruction: 'Pergunte: "Que mês é este?"'),
-          _buildCheckboxItem('Dia', _data.dia, (val) => setState(() => _data.dia = val), instruction: 'Pergunte: "Que dia do mês é hoje?"'),
-          _buildCheckboxItem('Dia da Semana', _data.diaSemana, (val) => setState(() => _data.diaSemana = val), instruction: 'Pergunte: "Que dia da semana é hoje?"'),
-          const SizedBox(height: 12),
-          const Text('2. Orientação Espacial (5 pontos)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-          _buildInstructionCard(
-            'Instrução',
-            'Faça as perguntas na ordem. Aceite o nome atual ou comum do local.',
-          ),
-          _buildCheckboxItem('País', _data.pais, (val) => setState(() => _data.pais = val), instruction: 'Pergunte: "Em que país nós estamos?"'),
-          _buildCheckboxItem('Estado', _data.estado, (val) => setState(() => _data.estado = val), instruction: 'Pergunte: "Em que estado nós estamos?"'),
-          _buildCheckboxItem('Cidade', _data.cidade, (val) => setState(() => _data.cidade = val), instruction: 'Pergunte: "Em que cidade nós estamos?"'),
-          _buildCheckboxItem('Hospital', _data.hospital, (val) => setState(() => _data.hospital = val), instruction: 'Pergunte: "Que tipo de lugar é este?" ou "Qual o nome deste lugar?"'),
-          _buildCheckboxItem('Andar/Piso', _data.andar, (val) => setState(() => _data.andar = val), instruction: 'Pergunte: "Em que andar/piso estamos?" ou "Qual o número do andar?"'),
-          const SizedBox(height: 12),
-          const Text('3. Registro (3 palavras)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-          _buildInstructionCard(
-            'Instrução',
-            'Diga estas 3 palavras claramente (exemplo: "CASA, BOLA, GATO" ou "PAPEL, FLOR, MESA"). O paciente deve REPETIR as palavras. Marque cada palavra que ele repetir CORRETAMENTE. Se não repetir todas, pode dar até 6 tentativas. IMPORTANTE: Marque apenas quando repetir corretamente.',
-          ),
-          _buildCheckboxItem('Palavra 1 (repetiu corretamente)', _data.palavra1, (val) => setState(() => _data.palavra1 = val), instruction: 'Marque se o paciente repetiu a primeira palavra corretamente'),
-          _buildCheckboxItem('Palavra 2 (repetiu corretamente)', _data.palavra2, (val) => setState(() => _data.palavra2 = val), instruction: 'Marque se o paciente repetiu a segunda palavra corretamente'),
-          _buildCheckboxItem('Palavra 3 (repetiu corretamente)', _data.palavra3, (val) => setState(() => _data.palavra3 = val), instruction: 'Marque se o paciente repetiu a terceira palavra corretamente'),
-          const SizedBox(height: 12),
-          const Text('4. Atenção e Cálculo - Subtração por 7 (5 pontos)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-          _buildInstructionCard(
-            'Instrução',
-            'Diga: "Agora vou fazer contas com você. Comece com 100 e vá subtraindo 7 de cada resposta. Quanto é 100 menos 7?" Continue perguntando: "E 93 menos 7?", "E 86 menos 7?", etc. Marque cada resposta CORRETA. Se errar uma, não pode continuar pontuando.',
-          ),
-          _buildCheckboxItem('100 - 7 = 93', _data.subtracao1, (val) => setState(() => _data.subtracao1 = val), instruction: 'Resposta correta: 93'),
-          _buildCheckboxItem('93 - 7 = 86', _data.subtracao2, (val) => setState(() => _data.subtracao2 = val), instruction: 'Resposta correta: 86'),
-          _buildCheckboxItem('86 - 7 = 79', _data.subtracao3, (val) => setState(() => _data.subtracao3 = val), instruction: 'Resposta correta: 79'),
-          _buildCheckboxItem('79 - 7 = 72', _data.subtracao4, (val) => setState(() => _data.subtracao4 = val), instruction: 'Resposta correta: 72'),
-          _buildCheckboxItem('72 - 7 = 65', _data.subtracao5, (val) => setState(() => _data.subtracao5 = val), instruction: 'Resposta correta: 65'),
-          const SizedBox(height: 12),
-          const Text('5. Recordação (3 palavras)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-          _buildInstructionCard(
-            'Instrução',
-            'Pergunte: "Lembra-se das 3 palavras que eu falei antes? Quais eram?" Marque cada palavra que o paciente lembrar CORRETAMENTE, sem dar pistas.',
-          ),
-          _buildCheckboxItem('Recordação Palavra 1', _data.recordacao1, (val) => setState(() => _data.recordacao1 = val), instruction: 'Marque se o paciente lembrou da primeira palavra'),
-          _buildCheckboxItem('Recordação Palavra 2', _data.recordacao2, (val) => setState(() => _data.recordacao2 = val), instruction: 'Marque se o paciente lembrou da segunda palavra'),
-          _buildCheckboxItem('Recordação Palavra 3', _data.recordacao3, (val) => setState(() => _data.recordacao3 = val), instruction: 'Marque se o paciente lembrou da terceira palavra'),
-          const SizedBox(height: 12),
-          const Text('6. Linguagem - Nomeação (2 pontos)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-          _buildInstructionCard(
-            'Instrução',
-            'Mostre um LÁPIS e um RELÓGIO (ou objetos similares). Pergunte: "O que é isto?" Aceite o nome comum do objeto. Marque apenas se nomear CORRETAMENTE.',
-          ),
-          _buildCheckboxItem('Lápis', _data.lapis, (val) => setState(() => _data.lapis = val), instruction: 'Paciente nomeou o lápis corretamente'),
-          _buildCheckboxItem('Relógio', _data.relogio, (val) => setState(() => _data.relogio = val), instruction: 'Paciente nomeou o relógio corretamente'),
-          const SizedBox(height: 12),
-          const Text('7. Linguagem - Outros (6 pontos)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-          _buildInstructionCard(
-            'Instrução',
-            'Aplique cada tarefa conforme descrito. Marque apenas quando completar CORRETAMENTE.',
-          ),
-          _buildCheckboxItem('Repetição', _data.repeticao, (val) => setState(() => _data.repeticao = val), instruction: 'Diga: "Repita esta frase: NEM AQUI, NEM LÁ, NEM EM LUGAR NENHUM". Marque se repetir sem erros.'),
-          _buildCheckboxItem('Comando 1', _data.comando1, (val) => setState(() => _data.comando1 = val), instruction: 'Diga: "Pegue este papel com a mão direita". Marque se executar corretamente.'),
-          _buildCheckboxItem('Comando 2', _data.comando2, (val) => setState(() => _data.comando2 = val), instruction: 'Diga: "Dobre o papel ao meio". Marque se executar corretamente.'),
-          _buildCheckboxItem('Comando 3', _data.comando3, (val) => setState(() => _data.comando3 = val), instruction: 'Diga: "Coloque o papel no chão". Marque se executar corretamente.'),
-          _buildCheckboxItem('Leitura', _data.leitura, (val) => setState(() => _data.leitura = val), instruction: 'Mostre um papel escrito: "FECHE OS OLHOS". Marque se ler corretamente.'),
-          _buildCheckboxItem('Escrita', _data.escrita, (val) => setState(() => _data.escrita = val), instruction: 'Diga: "Escreva uma frase completa". Marque se escrever uma frase com sujeito e verbo.'),
-          _buildCheckboxItem('Desenho', _data.desenho, (val) => setState(() => _data.desenho = val), instruction: 'Diga: "Copie este desenho" (mostre dois pentágonos entrelaçados). Marque se copiar com pelo menos 10 ângulos corretos e 2 interseções.'),
-          const SizedBox(height: 16),
-          Card(
-            color: score >= 24 ? Colors.green : score >= 18 ? Colors.orange : Colors.red,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text('MMSE Score Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('$score/30', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarMMSE();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala MMSE'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-        ],
-      ),
-    );
+  Color _getScoreColor(int score) {
+    if (score >= 24) return Colors.green;
+    if (score >= 18) return Colors.orange;
+    return Colors.red;
   }
 }

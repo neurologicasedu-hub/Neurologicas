@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/pdq39_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class PDQ39Screen extends StatefulWidget {
   const PDQ39Screen({super.key});
@@ -13,68 +15,67 @@ class PDQ39Screen extends StatefulWidget {
 class _PDQ39ScreenState extends State<PDQ39Screen> {
   final PDQ39Data _data = PDQ39Data();
 
-  // Perguntas oficiais do PDQ-39 por domínio
   final List<String> _mobilidadeQuestions = [
-    'Você teve dificuldade para vestir-se?',
-    'Você teve dificuldade para cortar comida?',
-    'Você teve dificuldade para tomar banho?',
-    'Você teve dificuldade para andar?',
-    'Você teve dificuldade para entrar e sair do carro?',
-    'Você teve dificuldade para fazer compras?',
-    'Você teve dificuldade para caminhar por lugares públicos?',
-    'Você teve dificuldade para se mover dentro de casa?',
-    'Você teve dificuldade para fazer suas tarefas domésticas?',
-    'Você ficou confinado em casa ou precisou evitar situações sociais?',
+    'Dificuldade para vestir-se?',
+    'Dificuldade para cortar comida?',
+    'Dificuldade para tomar banho?',
+    'Dificuldade para andar?',
+    'Dificuldade para entrar e sair do carro?',
+    'Dificuldade para fazer compras?',
+    'Dificuldade para caminhar por lugares públicos?',
+    'Dificuldade para se mover dentro de casa?',
+    'Dificuldade para fazer suas tarefas domésticas?',
+    'Confinado em casa ou evitou situações sociais?',
   ];
 
   final List<String> _atividadesVidaDiariaQuestions = [
-    'Você teve dificuldade para fazer as tarefas de rotina?',
-    'Você teve dificuldade para fazer suas tarefas domésticas sozinho?',
-    'Você teve dificuldade para cuidar de seus negócios pessoais?',
-    'Você teve dificuldade para realizar trabalhos manuais ou hobbies?',
-    'Você teve dificuldade para manter seu padrão de vida anterior?',
-    'Você precisou de ajuda de outras pessoas para realizar atividades do dia a dia?',
+    'Dificuldade para fazer as tarefas de rotina?',
+    'Dificuldade para fazer tarefas domésticas sozinho?',
+    'Dificuldade para cuidar de seus negócios pessoais?',
+    'Dificuldade para realizar trabalhos manuais ou hobbies?',
+    'Dificuldade para manter padrão de vida anterior?',
+    'Precisou de ajuda de outras pessoas?',
   ];
 
   final List<String> _bemEstarEmocionalQuestions = [
-    'Você sentiu deprimido?',
-    'Você sentiu isolado e sozinho?',
-    'Você teve medo ou preocupação com o futuro?',
-    'Você sentiu culpado ou um fardo para os outros?',
-    'Você sentiu ansioso?',
-    'Você perdeu a confiança em si mesmo?',
+    'Sentiu-se deprimido?',
+    'Sentiu-se isolado e sozinho?',
+    'Teve medo ou preocupação com o futuro?',
+    'Sentiu-se culpado ou um fardo?',
+    'Sentiu-se ansioso?',
+    'Perdeu a confiança em si mesmo?',
   ];
 
   final List<String> _estigmaQuestions = [
-    'Você evitou comer ou beber em público?',
-    'Você se sentiu embaraçado pela doença de Parkinson em público?',
-    'Você evitou situações sociais que você costumava frequentar?',
-    'Você se sentiu excluído do mundo em geral?',
+    'Evitou comer ou beber em público?',
+    'Sentiu-se embaraçado pela doença em público?',
+    'Evitou situações sociais?',
+    'Sentiu-se excluído do mundo em geral?',
   ];
 
   final List<String> _suporteSocialQuestions = [
-    'Você sentiu falta de apoio da família?',
-    'Você sentiu falta de apoio de seus amigos?',
-    'Você teve dificuldades nas relações com seu cônjuge, parceiro ou família próxima?',
+    'Falta de apoio da família?',
+    'Falta de apoio de amigos?',
+    'Dificuldades nas relações familiares?',
   ];
 
   final List<String> _cognicaoQuestions = [
-    'Você teve problemas para se concentrar?',
-    'Você teve problemas para lembrar das coisas?',
-    'Você teve dificuldades para raciocinar e resolver problemas?',
-    'Você teve problemas com sua memória?',
+    'Problemas para se concentrar?',
+    'Problemas para lembrar das coisas?',
+    'Dificuldades para raciocinar?',
+    'Problemas com memória?',
   ];
 
   final List<String> _comunicacaoQuestions = [
-    'Você teve dificuldades para falar?',
-    'Você teve dificuldades para se comunicar com outras pessoas?',
-    'Você teve problemas para entender o que as pessoas diziam?',
+    'Dificuldades para falar?',
+    'Dificuldades para comunicar-se?',
+    'Problemas para entender o que diziam?',
   ];
 
   final List<String> _desconfortoCorporalQuestions = [
-    'Você teve dores e desconfortos musculares?',
-    'Você teve câimbras ou espasmos musculares?',
-    'Você teve dores ou desconfortos incomuns em qualquer parte do seu corpo?',
+    'Dores e desconfortos musculares?',
+    'Câimbras ou espasmos?',
+    'Dores ou desconfortos incomuns?',
   ];
 
   Future<void> _salvarPDQ39() async {
@@ -86,8 +87,9 @@ class _PDQ39ScreenState extends State<PDQ39Screen> {
           'percentualMobilidade': _data.percentualMobilidade,
           'percentualAtividadesVidaDiaria': _data.percentualAtividadesVidaDiaria,
           'percentualBemEstarEmocional': _data.percentualBemEstarEmocional,
+          // Store all if needed, but model handles calculation
         },
-        resultado: 'Total: ${_data.percentualTotal.toStringAsFixed(1)}% - ${_data.interpretation}',
+        resultado: '${_data.percentualTotal.toStringAsFixed(1)}% - ${_data.interpretation}',
         totalScore: _data.totalScore,
       );
       
@@ -121,128 +123,129 @@ class _PDQ39ScreenState extends State<PDQ39Screen> {
     }
   }
 
-  Widget _buildDimensionSlider(String title, List<int> items, List<String> questions, String dimensionName) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: ExpansionTile(
-        title: Text('$title (${items.length} itens)', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-        children: [
-          ...List.generate(items.length, (i) => _buildRadioItem(
-            questions[i], // Use a pergunta completa ao invés de "Item X"
-            items[i],
-            const ['Nunca (0)', 'Ocasionalmente (1)', 'Às vezes (2)', 'Frequentemente (3)', 'Sempre/Não consigo (4)'],
-            (val) => setState(() => items[i] = val),
-          )),
-        ],
+  @override
+  Widget build(BuildContext context) {
+    final percentual = _data.percentualTotal;
+    return CalculatorScaffold(
+      title: 'PDQ-39 (Parkinson)',
+      body: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Text(
+            'Questionário de Qualidade de Vida na Doença de Parkinson.',
+            style: TextStyle(color: Colors.grey[600], fontSize: 14),
+            textAlign: TextAlign.center,
+          ),
+        ),
+
+        _buildSectionHeader('Mobilidade'),
+        ...List.generate(_mobilidadeQuestions.length, (i) => _buildQuestionItem(i, _mobilidadeQuestions[i], _data.mobilidade[i], (v) => setState(() => _data.mobilidade[i] = v))),
+
+        _buildSectionHeader('Atividades de Vida Diária'),
+        ...List.generate(_atividadesVidaDiariaQuestions.length, (i) => _buildQuestionItem(i, _atividadesVidaDiariaQuestions[i], _data.atividadesVidaDiaria[i], (v) => setState(() => _data.atividadesVidaDiaria[i] = v))),
+        
+        _buildSectionHeader('Bem-Estar Emocional'),
+        ...List.generate(_bemEstarEmocionalQuestions.length, (i) => _buildQuestionItem(i, _bemEstarEmocionalQuestions[i], _data.bemEstarEmocional[i], (v) => setState(() => _data.bemEstarEmocional[i] = v))),
+
+        _buildSectionHeader('Estigma'),
+        ...List.generate(_estigmaQuestions.length, (i) => _buildQuestionItem(i, _estigmaQuestions[i], _data.estigma[i], (v) => setState(() => _data.estigma[i] = v))),
+
+        _buildSectionHeader('Suporte Social'),
+        ...List.generate(_suporteSocialQuestions.length, (i) => _buildQuestionItem(i, _suporteSocialQuestions[i], _data.suporteSocial[i], (v) => setState(() => _data.suporteSocial[i] = v))),
+
+        _buildSectionHeader('Cognição'),
+        ...List.generate(_cognicaoQuestions.length, (i) => _buildQuestionItem(i, _cognicaoQuestions[i], _data.cognicao[i], (v) => setState(() => _data.cognicao[i] = v))),
+
+        _buildSectionHeader('Comunicação'),
+        ...List.generate(_comunicacaoQuestions.length, (i) => _buildQuestionItem(i, _comunicacaoQuestions[i], _data.comunicacao[i], (v) => setState(() => _data.comunicacao[i] = v))),
+
+        _buildSectionHeader('Desconforto Corporal'),
+        ...List.generate(_desconfortoCorporalQuestions.length, (i) => _buildQuestionItem(i, _desconfortoCorporalQuestions[i], _data.desconfortoCorporal[i], (v) => setState(() => _data.desconfortoCorporal[i] = v))),
+
+        // Result Card
+        Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _getScoreColor(percentual),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(percentual).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('PDQ-39 TOTAL', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  '${percentual.toStringAsFixed(1)}%',
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Mobilidade: ${_data.percentualMobilidade.toStringAsFixed(0)}% | AVD: ${_data.percentualAtividadesVidaDiaria.toStringAsFixed(0)}%',
+                  style: const TextStyle(fontSize: 12, color: Colors.white70),
+                ),
+                Text(
+                  'Emocional: ${_data.percentualBemEstarEmocional.toStringAsFixed(0)}% | Estigma: ${_data.percentualEstigma.toStringAsFixed(0)}%',
+                  style: const TextStyle(fontSize: 12, color: Colors.white70),
+                ),
+                 const SizedBox(height: 12),
+                Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                   decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                   child: Text(
+                    _data.interpretation,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarPDQ39,
+        backgroundColor: Colors.pink,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
 
-  Widget _buildRadioItem(String question, int value, List<String> options, ValueChanged<int> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              question,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
-            ...options.asMap().entries.map((entry) => RadioListTile<int>(
-              title: Text(entry.value, style: const TextStyle(fontSize: 12)),
-              value: entry.key,
-              groupValue: value,
-              onChanged: (val) => onChanged(val ?? 0),
-              activeColor: Colors.pink,
-              dense: true,
-            )),
-          ],
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, bottom: 8, top: 20),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          color: Colors.pink.shade800,
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+          letterSpacing: 1.0,
         ),
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final percentual = _data.percentualTotal;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('PDQ-39 - Parkinson\'s Disease Questionnaire'),
-        centerTitle: true,
-        backgroundColor: Colors.pink,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'PDQ-39 - Questionário de Qualidade de Vida (39 itens)',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Avalie cada item de 0 (nunca) a 4 (sempre ou não consigo)',
-            style: TextStyle(fontSize: 12),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          _buildDimensionSlider('Mobilidade', _data.mobilidade, _mobilidadeQuestions, 'mobilidade'),
-          _buildDimensionSlider('Atividades de Vida Diária', _data.atividadesVidaDiaria, _atividadesVidaDiariaQuestions, 'atividadesVidaDiaria'),
-          _buildDimensionSlider('Bem-estar Emocional', _data.bemEstarEmocional, _bemEstarEmocionalQuestions, 'bemEstarEmocional'),
-          _buildDimensionSlider('Estigma', _data.estigma, _estigmaQuestions, 'estigma'),
-          _buildDimensionSlider('Suporte Social', _data.suporteSocial, _suporteSocialQuestions, 'suporteSocial'),
-          _buildDimensionSlider('Cognição', _data.cognicao, _cognicaoQuestions, 'cognicao'),
-          _buildDimensionSlider('Comunicação', _data.comunicacao, _comunicacaoQuestions, 'comunicacao'),
-          _buildDimensionSlider('Desconforto Corporal', _data.desconfortoCorporal, _desconfortoCorporalQuestions, 'desconfortoCorporal'),
-          const SizedBox(height: 16),
-          Card(
-            color: percentual <= 25 ? Colors.green : percentual <= 50 ? Colors.orange : Colors.red,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Text('PDQ-39: ${percentual.toStringAsFixed(1)}%', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('Mobilidade: ${_data.percentualMobilidade.toStringAsFixed(1)}% | AVD: ${_data.percentualAtividadesVidaDiaria.toStringAsFixed(1)}%\nEmocional: ${_data.percentualBemEstarEmocional.toStringAsFixed(1)}% | Estigma: ${_data.percentualEstigma.toStringAsFixed(1)}%', style: const TextStyle(fontSize: 11, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarPDQ39();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala PDQ-39'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.pink,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-        ],
-      ),
+  Widget _buildQuestionItem(int index, String question, int value, ValueChanged<int> onChanged) {
+    return QuestionCard<int>(
+      title: question,
+      value: value,
+      onChanged: onChanged,
+      options: const [
+        QuestionOption(label: 'Nunca (0)', value: 0),
+        QuestionOption(label: 'Ocasionalmente (1)', value: 1),
+        QuestionOption(label: 'Às vezes (2)', value: 2),
+        QuestionOption(label: 'Frequentemente (3)', value: 3),
+        QuestionOption(label: 'Sempre/Impossível (4)', value: 4),
+      ],
     );
+  }
+
+  Color _getScoreColor(double percentual) {
+    if (percentual <= 25) return Colors.green;
+    if (percentual <= 50) return Colors.orange;
+    return Colors.red;
   }
 }

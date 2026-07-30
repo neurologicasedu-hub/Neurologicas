@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/has_bled_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class HASBLEDScreen extends StatefulWidget {
   const HASBLEDScreen({super.key});
@@ -11,6 +13,20 @@ class HASBLEDScreen extends StatefulWidget {
 
 class _HASBLEDScreenState extends State<HASBLEDScreen> {
   final HASBLEDData _data = HASBLEDData();
+  final TextEditingController _idadeController = TextEditingController();
+
+  @override
+  void dispose() {
+    _idadeController.dispose();
+    super.dispose();
+  }
+
+  void _updateIdade() {
+    setState(() {
+      final idade = int.tryParse(_idadeController.text) ?? 0;
+      _data.idade = idade >= 65 ? 1 : 0;
+    });
+  }
 
   Future<void> _salvarHASBLED() async {
     try {
@@ -60,20 +76,6 @@ class _HASBLEDScreenState extends State<HASBLEDScreen> {
       }
     }
   }
-  final TextEditingController _idadeController = TextEditingController();
-
-  @override
-  void dispose() {
-    _idadeController.dispose();
-    super.dispose();
-  }
-
-  void _updateIdade() {
-    setState(() {
-      final idade = int.tryParse(_idadeController.text) ?? 0;
-      _data.idade = idade >= 65 ? 1 : 0;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,48 +83,109 @@ class _HASBLEDScreenState extends State<HASBLEDScreen> {
     final risco = _data.riscoSangramento;
     final conduta = _data.conduta;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('HAS-BLED Score'), centerTitle: true, backgroundColor: Colors.red.shade800),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text('HAS-BLED Score - Risco de Sangramento', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-          const SizedBox(height: 12),
-          _buildCheckboxItem('Hipertensão (SBP >160)', _data.hipertensao, (val) => setState(() => _data.hipertensao = val)),
-          _buildCheckboxItem('Função Renal/Hepática', _data.funcaoRenal || _data.funcaoHepatica, (val) => setState(() {
-            _data.funcaoRenal = val;
-            _data.funcaoHepatica = val;
-          })),
-          _buildCheckboxItem('AVC Prévio', _data.acidenteVascular, (val) => setState(() => _data.acidenteVascular = val)),
-          _buildCheckboxItem('Sangramento Maior', _data.sangramento, (val) => setState(() => _data.sangramento = val)),
-          _buildCheckboxItem('Labilidade INR', _data.labilidadeINR, (val) => setState(() => _data.labilidadeINR = val)),
-          TextField(controller: _idadeController, decoration: const InputDecoration(labelText: 'Idade (anos)', border: OutlineInputBorder()), keyboardType: TextInputType.number, onChanged: (_) => _updateIdade()),
-          _buildCheckboxItem('Drogas/Álcool', _data.drogas, (val) => setState(() => _data.drogas = val)),
-          _buildCheckboxItem('Medicamentos Antiplaquetários', _data.medicacoes, (val) => setState(() => _data.medicacoes = val)),
-          const SizedBox(height: 16),
-          Card(color: _getScoreColor(score), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 6, child: Padding(padding: const EdgeInsets.all(20), child: Column(children: [const Text('HAS-BLED Score', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)), const SizedBox(height: 8), Text('$score', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)), const SizedBox(height: 12), Text(risco, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center), const SizedBox(height: 12), Text(conduta, style: const TextStyle(fontSize: 13, color: Colors.white70), textAlign: TextAlign.center)]))),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarHASBLED();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala HAS-BLED'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+    return CalculatorScaffold(
+      title: 'HAS-BLED',
+      body: [
+         Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Risco de sangramento em pacientes com FA.',
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.arrow_back), label: const Text('Voltar'), style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade800, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12))),
-        ],
+
+          _buildYesNoQuestion('Hipertensão (SBP >160)', _data.hipertensao, (val) => setState(() => _data.hipertensao = val)),
+          _buildYesNoQuestion('Função Renal Anormal', _data.funcaoRenal, (val) => setState(() => _data.funcaoRenal = val)),
+          _buildYesNoQuestion('Função Hepática Anormal', _data.funcaoHepatica, (val) => setState(() => _data.funcaoHepatica = val)),
+          _buildYesNoQuestion('AVC Prévio', _data.acidenteVascular, (val) => setState(() => _data.acidenteVascular = val)),
+          _buildYesNoQuestion('Sangramento Maior Prévio/Predisposição', _data.sangramento, (val) => setState(() => _data.sangramento = val)),
+          _buildYesNoQuestion('Labilidade INR', _data.labilidadeINR, (val) => setState(() => _data.labilidadeINR = val)),
+          
+          Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Idade', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2D3748))),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _idadeController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Idade (anos)',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onChanged: (_) => _updateIdade(),
+                ),
+                 const SizedBox(height: 8),
+                 Text('Pontos: ${_data.idade}', style: const TextStyle(fontSize: 14, color: Colors.blue, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+
+          _buildYesNoQuestion('Uso de Drogas ou Álcool', _data.drogas, (val) => setState(() => _data.drogas = val)),
+          _buildYesNoQuestion('Medicamentos que predispõem sangramento', _data.medicacoes, (val) => setState(() => _data.medicacoes = val)),
+
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _getScoreColor(score),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(score).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('HAS-BLED SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  '$score',
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                const SizedBox(height: 12),
+                 Text(
+                  risco,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                   textAlign: TextAlign.center,
+                ),
+                 const SizedBox(height: 8),
+                 Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                   decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+                   child: Text(
+                      conduta,
+                      style: const TextStyle(fontSize: 12, color: Colors.white),
+                      textAlign: TextAlign.center,
+                    ),
+                 ),
+              ],
+            ),
+          ),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarHASBLED,
+        backgroundColor: Colors.red.shade800,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
 
-  Widget _buildCheckboxItem(String title, bool value, ValueChanged<bool> onChanged) {
-    return Card(margin: const EdgeInsets.symmetric(vertical: 4), elevation: 1, child: CheckboxListTile(title: Text(title, style: const TextStyle(fontSize: 14)), value: value, onChanged: (val) => onChanged(val ?? false), activeColor: Colors.red.shade800));
+  Widget _buildYesNoQuestion(String title, bool value, ValueChanged<bool> onChanged) {
+    return QuestionCard<bool>(
+      title: title,
+      value: value,
+      onChanged: onChanged,
+      options: const [
+        QuestionOption(label: 'Não', value: false),
+        QuestionOption(label: 'Sim', value: true),
+      ],
+    );
   }
 
   Color _getScoreColor(int score) {
@@ -131,4 +194,3 @@ class _HASBLEDScreenState extends State<HASBLEDScreen> {
     return Colors.red;
   }
 }
-

@@ -3,6 +3,7 @@ import 'dart:math';
 import '../models/msfc_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
 
 class MSFCScreen extends StatefulWidget {
   const MSFCScreen({super.key});
@@ -31,7 +32,6 @@ class _MSFCScreenState extends State<MSFCScreen> {
   }
 
   void _gerarSequenciaPASAT3() {
-    // Gera 61 números aleatórios de 1 a 9 para PASAT-3
     _pasat3Numeros.clear();
     for (int i = 0; i < 61; i++) {
       _pasat3Numeros.add(_random.nextInt(9) + 1);
@@ -47,12 +47,7 @@ class _MSFCScreenState extends State<MSFCScreen> {
   }
 
   void _verificarRespostaPASAT3() {
-    // PASAT-3: soma cada número com o anterior
-    // Primeiro número (índice 0) não tem soma, apenas mostramos
-    // Começamos a somar a partir do índice 1 (60 somas no total)
-    
     if (_pasat3CurrentIndex == 0) {
-      // Primeiro número: apenas mostra, passa para próxima
       setState(() {
         _pasat3CurrentIndex = 1;
         _pasat3RespostaController.clear();
@@ -60,41 +55,25 @@ class _MSFCScreenState extends State<MSFCScreen> {
       return;
     }
 
-    // A partir do índice 1, verificamos a soma
     final resposta = int.tryParse(_pasat3RespostaController.text);
     if (resposta == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor, insira uma resposta numérica'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Insira número'), backgroundColor: Colors.red));
       return;
     }
 
     final numeroAtual = _pasat3Numeros[_pasat3CurrentIndex];
     final numeroAnterior = _pasat3Numeros[_pasat3CurrentIndex - 1];
     final respostaCorreta = numeroAtual + numeroAnterior;
-
     final estaCorreta = resposta == respostaCorreta;
     
     setState(() {
-      // Armazena a resposta (índice da lista de respostas começa em 0, mas CurrentIndex começa em 1)
       _data.pasat3Respostas[_pasat3CurrentIndex - 1] = estaCorreta;
-      
       if (_pasat3CurrentIndex < 60) {
         _pasat3CurrentIndex++;
         _pasat3RespostaController.clear();
       } else {
-        // Teste completo - calcula o score
         _data.calcularPASAT3();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('PASAT-3 completo! Score: ${_data.pasat3Score}/60'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('PASAT-3 completo! Score: ${_data.pasat3Score}/60'), backgroundColor: Colors.green));
       }
     });
   }
@@ -124,281 +103,145 @@ class _MSFCScreenState extends State<MSFCScreen> {
             action: SnackBarAction(
               label: 'Ver Relatório',
               textColor: Colors.white,
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/report');
-              },
+              onPressed: () => Navigator.pushReplacementNamed(context, '/report'),
             ),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao salvar: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao salvar: $e'), backgroundColor: Colors.red));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('MSFC - Multiple Sclerosis Functional Composite'),
-        centerTitle: true,
-        backgroundColor: Colors.cyan,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'MSFC - Composto Funcional de Esclerose Múltipla',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 1,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('1. T25FW - Timed 25-Foot Walk', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                  const Text('Tempo em segundos para caminhar 25 pés (~7.6 metros)', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _t25fwController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Tempo (segundos)',
-                      border: OutlineInputBorder(),
-                      suffixText: 's',
-                    ),
-                    onChanged: (val) {
-                      final time = double.tryParse(val.replaceAll(',', '.'));
-                      if (time != null) {
-                        setState(() => _data.t25fwSegundos = time);
-                      }
-                    },
-                  ),
-                ],
-              ),
+    return CalculatorScaffold(
+      title: 'MSFC',
+      body: [
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Multiple Sclerosis Functional Composite',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+              textAlign: TextAlign.center,
             ),
           ),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 1,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('2. 9HPT - 9-Hole Peg Test', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                  const Text('Tempo em segundos para cada mão', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _hptEsqController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Mão Esquerda (s)',
-                            border: OutlineInputBorder(),
-                          ),
-                          onChanged: (val) {
-                            final time = double.tryParse(val.replaceAll(',', '.'));
-                            if (time != null) {
-                              setState(() => _data.nineHptEsquerda = time);
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextField(
-                          controller: _hptDirController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Mão Direita (s)',
-                            border: OutlineInputBorder(),
-                          ),
-                          onChanged: (val) {
-                            final time = double.tryParse(val.replaceAll(',', '.'));
-                            if (time != null) {
-                              setState(() => _data.nineHptDireita = time);
-                            }
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+
+          _buildComponentCard('1. T25FW - Caminhada 25 Pés', 
+            TextField(
+              controller: _t25fwController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Tempo (s)', border: OutlineInputBorder(), suffixText: 's'),
+              onChanged: (v) {
+                final d = double.tryParse(v.replaceAll(',', '.'));
+                if(d != null) setState(() => _data.t25fwSegundos = d);
+              },
             ),
           ),
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 1,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('3. PASAT-3 - Paced Auditory Serial Addition Test', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                  const Text('Some cada número ao anterior. 60 perguntas.', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                  const SizedBox(height: 8),
-                  if (!_pasat3Iniciado)
-                    ElevatedButton(
-                      onPressed: _iniciarPASAT3,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.cyan,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('Iniciar PASAT-3'),
-                    )
-                  else ...[
-                    Text(
-                      _pasat3CurrentIndex == 0 
-                        ? 'Número inicial (1/61)' 
-                        : 'Pergunta $_pasat3CurrentIndex/60',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    if (_pasat3CurrentIndex == 0)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Primeiro número (apenas escute/anote, não há soma):',
-                            style: TextStyle(fontSize: 13),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Número: ${_pasat3Numeros[0]}',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      )
-                    else
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Número anterior: ${_pasat3Numeros[_pasat3CurrentIndex - 1]}',
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                          Text(
-                            'Número atual: ${_pasat3Numeros[_pasat3CurrentIndex]}',
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Qual é a soma?',
-                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    if (_pasat3CurrentIndex > 0) ...[
-                      const SizedBox(height: 12),
+
+          _buildComponentCard('2. 9HPT - Teste dos 9 Pinos', 
+            Row(children: [
+              Expanded(child: TextField(
+                controller: _hptEsqController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Mão Esq (s)', border: OutlineInputBorder()),
+                onChanged: (v) {
+                   final d = double.tryParse(v.replaceAll(',', '.'));
+                   if(d != null) setState(() => _data.nineHptEsquerda = d);
+                },
+              )),
+              const SizedBox(width: 8),
+              Expanded(child: TextField(
+                controller: _hptDirController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Mão Dir (s)', border: OutlineInputBorder()),
+                onChanged: (v) {
+                   final d = double.tryParse(v.replaceAll(',', '.'));
+                   if(d != null) setState(() => _data.nineHptDireita = d);
+                },
+              )),
+            ]),
+          ),
+
+          _buildComponentCard('3. PASAT-3 - Cálculo Serial', 
+             Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+               children: [
+                 if (!_pasat3Iniciado)
+                   Center(child: ElevatedButton(onPressed: _iniciarPASAT3, child: const Text('Iniciar Teste Interativo')))
+                 else ...[
+                   Center(child: Text(_pasat3CurrentIndex == 0 ? 'MEMORIZE:' : 'SOME COM ANTERIOR:', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey))),
+                   const SizedBox(height: 4),
+                   Center(child: Text('${_pasat3Numeros[_pasat3CurrentIndex]}', style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold))),
+                   if (_pasat3CurrentIndex > 0) ...[
+                      const SizedBox(height: 8),
                       TextField(
                         controller: _pasat3RespostaController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Resposta',
-                          border: OutlineInputBorder(),
-                          hintText: 'Digite a soma',
-                        ),
                         autofocus: true,
+                        textAlign: TextAlign.center,
+                        decoration: const InputDecoration(hintText: 'Soma', border: OutlineInputBorder()),
                         onSubmitted: (_) => _verificarRespostaPASAT3(),
                       ),
-                      const SizedBox(height: 12),
-                    ],
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: _verificarRespostaPASAT3,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.cyan,
-                              foregroundColor: Colors.white,
-                            ),
-                            child: Text(_pasat3CurrentIndex == 0 ? 'Próximo número' : _pasat3CurrentIndex >= 60 ? 'Finalizar' : 'Próxima'),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _pasat3CurrentIndex == 0 
-                        ? 'Progresso: 0/60 respostas (número inicial)' 
-                        : 'Progresso: $_pasat3CurrentIndex/60 respostas',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ],
+                   ],
+                   const SizedBox(height: 12),
+                   SizedBox(
+                     width: double.infinity,
+                     child: ElevatedButton(
+                       onPressed: _verificarRespostaPASAT3,
+                       child: Text(_pasat3CurrentIndex == 0 ? 'Próximo' : 'Confirmar'),
+                     ),
+                   ),
+                   const SizedBox(height: 8),
+                   Text('Progresso: $_pasat3CurrentIndex/60', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                 ]
+               ],
+             ),
+          ),
+          
+          if (_data.totalScore != null)
+            Container(
+              margin: const EdgeInsets.only(top: 16, bottom: 24),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(color: Colors.cyan, borderRadius: BorderRadius.circular(24)),
+              child: Column(
+                children: [
+                  Text('Z-Score Total: ${_data.totalScore!.toStringAsFixed(2)}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+                  const SizedBox(height: 8),
+                  Text('PASAT-3: ${_data.pasat3Score}/60', style: const TextStyle(color: Colors.white)),
+                   const SizedBox(height: 8),
+                  Text(_data.interpretation, style: const TextStyle(color: Colors.white), textAlign: TextAlign.center),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          if (_data.totalScore != null)
-            Card(
-              color: _data.totalScore! >= 70 ? Colors.green : _data.totalScore! >= 50 ? Colors.orange : Colors.red,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 6,
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    Text('MSFC Score: ${_data.totalScore!.toStringAsFixed(2)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                    const SizedBox(height: 8),
-                    Text('PASAT-3: ${_data.pasat3Score}/60', style: const TextStyle(fontSize: 14, color: Colors.white)),
-                    const SizedBox(height: 12),
-                    Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                  ],
-                ),
-              ),
-            ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarMSFC();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala MSFC'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.cyan,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-        ],
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarMSFC,
+        backgroundColor: Colors.cyan,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
 
-  @override
-  void dispose() {
-    _t25fwController.dispose();
-    _hptEsqController.dispose();
-    _hptDirController.dispose();
-    _pasat3RespostaController.dispose();
-    super.dispose();
+  Widget _buildComponentCard(String title, Widget child) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            child,
+          ],
+        ),
+      ),
+    );
   }
 }

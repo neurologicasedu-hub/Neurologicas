@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/hit6_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class HIT6Screen extends StatefulWidget {
   const HIT6Screen({super.key});
@@ -21,9 +23,6 @@ class _HIT6ScreenState extends State<HIT6Screen> {
     'Nas últimas 4 semanas, com que frequência você sentiu irritado por causa de sua dor de cabeça?',
     'Nas últimas 4 semanas, com que frequência a dor de cabeça limitou sua capacidade de se concentrar em atividades?',
   ];
-
-  final List<String> _options = ['Nunca (6)', 'Raramente (8)', 'Às vezes (10)', 'Muito frequentemente (11)', 'Sempre (13)'];
-  final List<int> _optionValues = [6, 8, 10, 11, 13];
 
   Future<void> _salvarHIT6() async {
     try {
@@ -66,90 +65,93 @@ class _HIT6ScreenState extends State<HIT6Screen> {
     }
   }
 
-  Widget _buildQuestionItem(int index, String question, int value, ValueChanged<int> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('${index + 1}. $question', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            ..._options.asMap().entries.map((entry) => RadioListTile<int>(
-              title: Text(entry.value, style: const TextStyle(fontSize: 12)),
-              value: _optionValues[entry.key],
-              groupValue: value,
-              onChanged: (val) => onChanged(val ?? 6),
-              activeColor: Colors.amber,
-              dense: true,
-            )),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final score = _data.totalScore;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('HIT-6'),
-        centerTitle: true,
-        backgroundColor: Colors.amber.shade700,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'HIT-6 - Headache Impact Test\nNas últimas 4 semanas, com que frequência você teve os seguintes problemas?',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
+    return CalculatorScaffold(
+      title: 'HIT-6',
+      body: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Nas últimas 4 semanas, com que frequência você teve os seguintes problemas?',
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
           ),
-          const SizedBox(height: 16),
+
           _buildQuestionItem(0, _questions[0], _data.dorSevera, (v) => setState(() => _data.dorSevera = v)),
           _buildQuestionItem(1, _questions[1], _data.limitaAtividades, (v) => setState(() => _data.limitaAtividades = v)),
           _buildQuestionItem(2, _questions[2], _data.desejaDescansar, (v) => setState(() => _data.desejaDescansar = v)),
           _buildQuestionItem(3, _questions[3], _data.cansaco, (v) => setState(() => _data.cansaco = v)),
           _buildQuestionItem(4, _questions[4], _data.irritado, (v) => setState(() => _data.irritado = v)),
           _buildQuestionItem(5, _questions[5], _data.dificuldadeConcentrar, (v) => setState(() => _data.dificuldadeConcentrar = v)),
-          const SizedBox(height: 16),
-          Card(
-            color: score <= 49 ? Colors.green : score <= 55 ? Colors.lightGreen : score <= 59 ? Colors.orange : Colors.red,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text('HIT-6 Score', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('$score/78', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                ],
-              ),
+
+          // Result Card
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _getScoreColor(score),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(score).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('HIT-6 SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  '$score',
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                const Text(
+                  '/ 78',
+                  style: TextStyle(fontSize: 18, color: Colors.white70),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                   decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                   child: Text(
+                    _data.interpretation,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: _salvarHIT6,
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala HIT-6'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber.shade700, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
-        ],
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarHIT6,
+        backgroundColor: Colors.amber.shade700,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
-}
 
+  Widget _buildQuestionItem(int index, String question, int value, ValueChanged<int> onChanged) {
+    return QuestionCard<int>(
+      title: '${index + 1}. $question',
+      value: value,
+      onChanged: onChanged,
+      options: const [
+        QuestionOption(label: 'Nunca (6)', value: 6),
+        QuestionOption(label: 'Raramente (8)', value: 8),
+        QuestionOption(label: 'Às vezes (10)', value: 10),
+        QuestionOption(label: 'Muito frequentemente (11)', value: 11),
+        QuestionOption(label: 'Sempre (13)', value: 13),
+      ],
+    );
+  }
+
+  Color _getScoreColor(int score) {
+    if (score <= 49) return Colors.green;
+    if (score <= 55) return Colors.lightGreen;
+    if (score <= 59) return Colors.orange;
+    return Colors.red;
+  }
+}

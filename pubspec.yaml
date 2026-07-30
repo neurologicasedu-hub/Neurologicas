@@ -3,7 +3,7 @@ description: Calculadora de Scores Neurológicos para iOS e Android
 
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.10+14
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -22,14 +22,28 @@ dependencies:
   printing: ^5.13.0
   share_plus: ^12.0.1
   path_provider: ^2.1.5
+  flutter_secure_storage: ^10.3.1
+  sign_in_with_apple: ^6.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
 
   assets:
     - assets/images/
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/app_icon.png"
+  min_sdk_android: 21
+  web:
+    generate: true
+    image_path: "assets/images/app_icon.png"
+    background_color: "#ffffff"
+    theme_color: "#ffffff"

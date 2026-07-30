@@ -3,6 +3,8 @@ import '../models/hunt_hess_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
 import '../helpers/auto_save_mixin.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class HuntHessScreen extends StatefulWidget {
   const HuntHessScreen({super.key});
@@ -78,89 +80,67 @@ class _HuntHessScreenState extends State<HuntHessScreen> with AutoSaveMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Hunt and Hess Scale'),
-        centerTitle: true,
-        backgroundColor: Colors.purple,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Classificação de Hemorragia Subaracnóidea',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          ...List.generate(5, (index) {
-            int nivel = index + 1;
-            final tempData = HuntHessData(nivel: nivel);
-            return _buildRadioItem(
-              'Grau $nivel',
-              tempData.descricao,
-              nivel == _data.nivel,
-              () {
-                setState(() => _data.nivel = nivel);
-                onDataChanged();
-              },
-            );
-          }),
-          const SizedBox(height: 16),
-          Card(
-            color: _getScoreColor(_data.nivel),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Text('Grau ${_data.nivel}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(_data.interpretacao, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                  const SizedBox(height: 8),
-                  Text('Mortalidade estimada: ${_data.mortalidadeEstimada}', style: const TextStyle(fontSize: 13, color: Colors.white70), textAlign: TextAlign.center),
-                ],
-              ),
+    return CalculatorScaffold(
+      title: 'Hunt & Hess',
+      body: [
+         Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Classificação de Hemorragia Subaracnóidea.',
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarHuntHess();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala Hunt and Hess'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.purple, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildRadioItem(String title, String description, bool selected, VoidCallback onTap) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: selected ? 4 : 1,
-      color: selected ? Colors.purple.shade50 : null,
-      child: RadioListTile<int>(
-        title: Text(title, style: TextStyle(fontSize: 14, fontWeight: selected ? FontWeight.bold : FontWeight.normal)),
-        subtitle: Text(description, style: const TextStyle(fontSize: 12)),
-        value: 1,
-        groupValue: selected ? 1 : null,
-        onChanged: (_) => onTap(),
-        activeColor: Colors.purple,
+          QuestionCard<int>(
+            title: 'Sinais e Sintomas',
+            value: _data.nivel,
+            onChanged: (v) {
+              setState(() => _data.nivel = v);
+              onDataChanged();
+            },
+            options: const [
+              QuestionOption(label: 'Grau 1: Assintomático, cefaleia leve, rigidez nuca leve', value: 1),
+              QuestionOption(label: 'Grau 2: Cefaleia moderada a severa, rigidez de nuca, sem déficit focal (exceto paralisia NC)', value: 2),
+              QuestionOption(label: 'Grau 3: Sonolência, confusão, déficit focal leve', value: 3),
+              QuestionOption(label: 'Grau 4: Estupor, hemiparesia moderada a severa, rigidez de descerebração precoce', value: 4),
+              QuestionOption(label: 'Grau 5: Coma profundo, rigidez de descerebração, aparência moribunda', value: 5),
+            ],
+          ),
+
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _getScoreColor(_data.nivel),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(_data.nivel).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('HUNT & HESS GRADE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  '${_data.nivel}',
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                 const SizedBox(height: 12),
+                 Text(
+                  'Mortalidade Estimada: ${_data.mortalidadeEstimada}',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarHuntHess,
+        backgroundColor: Colors.purple,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -171,4 +151,3 @@ class _HuntHessScreenState extends State<HuntHessScreen> with AutoSaveMixin {
     return Colors.red;
   }
 }
-

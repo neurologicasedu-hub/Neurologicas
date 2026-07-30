@@ -3,6 +3,8 @@ import '../models/glasgow_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
 import '../helpers/auto_save_mixin.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class GlasgowsScreen extends StatefulWidget {
   const GlasgowsScreen({super.key});
@@ -79,269 +81,227 @@ class _GlasgowsScreenState extends State<GlasgowsScreen> with AutoSaveMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Escala de Coma de Glasgow'),
-        centerTitle: true,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          ExpansionTile(
-            title: const Text(
-              "Descrição da Escala",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: const Text(
-                  "A escala é composta por três parâmetros independentes: abertura ocular, resposta verbal e resposta motora. Cada um desses itens possui uma pontuação específica, e o valor final do Glasgow corresponde à soma das pontuações obtidas em cada categoria.\n\n"
-                  "A abertura ocular avalia a capacidade do paciente de abrir os olhos. Ela pode ocorrer de forma espontânea, ao estímulo verbal, ao estímulo doloroso ou pode estar ausente, recebendo pontuações que variam de 4 a 1, respectivamente.\n\n"
-                  "A resposta verbal analisa a capacidade de comunicação e orientação do paciente. O indivíduo pode estar orientado, confuso, emitir palavras inapropriadas, produzir apenas sons incompreensíveis ou não apresentar resposta verbal, com pontuação variando de 5 a 1.\n\n"
-                  "A resposta motora avalia a reação do paciente a comandos ou estímulos dolorosos. Ela pode ir desde obedecer comandos até ausência total de resposta motora, com pontuação de 6 a 1.\n\n"
-                  "Somando-se os três componentes, a pontuação total da Escala de Glasgow varia de 3 a 15 pontos, sendo 15 o nível máximo de consciência possível e 3 o nível mínimo, correspondente à ausência completa de respostas ocular, verbal e motora. Quando o paciente recebe a menor pontuação em todos os três itens (primeira opção de cada categoria), ele totaliza 3 pontos.\n\n"
-                  "Além da pontuação clássica, pode-se associar a avaliação pupilar, que considera a reatividade das pupilas à luz. Cada pupila não reativa recebe 1 ponto de penalidade, podendo totalizar até 2 pontos. Essa pontuação pupilar não é somada, mas subtraída do valor total do Glasgow, resultando no chamado Glasgow com pupilas (GCS-P). Por exemplo, um paciente com Glasgow 10 e ambas as pupilas não reativas terá pontuação final de 8.",
-                  style: TextStyle(fontSize: 14, color: Colors.black87),
-                  textAlign: TextAlign.justify,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _buildSection(
-            title: "Abertura Ocular",
-            color: Colors.blue.shade400,
-            icon: Icons.remove_red_eye,
-            options: const [
-              {"label": "Espontânea", "value": 4},
-              {"label": "Ao estímulo verbal", "value": 3},
-              {"label": "Ao estímulo doloroso", "value": 2},
-              {"label": "Ausente", "value": 1},
-            ],
-            selectedValue: _glasgowData.ocular,
-            onChanged: (v) {
-              setState(() => _glasgowData.ocular = v);
-              onDataChanged();
-            },
-          ),
-          const SizedBox(height: 12),
-          _buildSection(
-            title: "Resposta Verbal",
-            color: Colors.red.shade300,
-            icon: Icons.mic,
-            options: const [
-              {"label": "Orientado", "value": 5},
-              {"label": "Confuso", "value": 4},
-              {"label": "Palavras inapropriadas", "value": 3},
-              {"label": "Sons incompreensíveis", "value": 2},
-              {"label": "Ausente (sem resposta verbal)", "value": 1},
-            ],
-            selectedValue: _glasgowData.verbal,
-            onChanged: (v) {
-              setState(() => _glasgowData.verbal = v);
-              onDataChanged();
-            },
-          ),
-          const SizedBox(height: 12),
-          _buildSection(
-            title: "Resposta Motora",
-            color: Colors.orange.shade400,
-            icon: Icons.front_hand,
-            options: const [
-              {"label": "Obedece a comandos", "value": 6},
-              {"label": "Localiza a dor", "value": 5},
-              {"label": "Movimentos de retirada", "value": 4},
-              {"label": "Flexão anormal (decorticação)", "value": 3},
-              {"label": "Extensão anormal (descerebração)", "value": 2},
-              {"label": "Ausência total de resposta motora", "value": 1},
-            ],
-            selectedValue: _glasgowData.motora,
-            onChanged: (v) {
-              setState(() => _glasgowData.motora = v);
-              onDataChanged();
-            },
-          ),
-          const SizedBox(height: 12),
-          _buildSection(
-            title: "Reatividade Pupilar (Penalidade GCS-P)",
-            color: Colors.green.shade400,
-            icon: Icons.remove_red_eye_outlined,
-            options: const [
-              {"label": "Ambas as pupilas reagem (0 de penalidade)", "value": 0},
-              {"label": "Apenas uma pupila reage (1 de penalidade)", "value": 1},
-              {"label": "Nenhuma pupila reage (2 de penalidade)", "value": 2},
-            ],
-            selectedValue: _glasgowData.pupilar,
-            onChanged: (v) {
-              setState(() => _glasgowData.pupilar = v);
-              onDataChanged();
-            },
-          ),
-          const SizedBox(height: 30),
-          _buildTotalCard(),
-        ],
+    return CalculatorScaffold(
+      title: 'Escala de Coma de Glasgow',
+      body: [
+        _buildInfoCard(),
+        _buildQuestion(
+          title: "Abertura Ocular",
+          icon: Icons.remove_red_eye,
+          iconColor: Colors.blue.shade400,
+          value: _glasgowData.ocular,
+          onChanged: (v) => setState(() => _glasgowData.ocular = v),
+          options: [
+            {"label": "Espontânea", "value": 4},
+            {"label": "Ao estímulo verbal", "value": 3},
+            {"label": "Ao estímulo doloroso", "value": 2},
+            {"label": "Ausente", "value": 1},
+          ],
+        ),
+        _buildQuestion(
+          title: "Resposta Verbal",
+          icon: Icons.mic,
+          iconColor: Colors.red.shade300,
+          value: _glasgowData.verbal,
+          onChanged: (v) => setState(() => _glasgowData.verbal = v),
+          options: [
+            {"label": "Orientado", "value": 5},
+            {"label": "Confuso", "value": 4},
+            {"label": "Palavras inapropriadas", "value": 3},
+            {"label": "Sons incompreensíveis", "value": 2},
+            {"label": "Ausente", "value": 1},
+          ],
+        ),
+        _buildQuestion(
+          title: "Resposta Motora",
+          icon: Icons.front_hand,
+          iconColor: Colors.orange.shade400,
+          value: _glasgowData.motora,
+          onChanged: (v) => setState(() => _glasgowData.motora = v),
+          options: [
+            {"label": "Obedece a comandos", "value": 6},
+            {"label": "Localiza a dor", "value": 5},
+            {"label": "Movimentos de retirada", "value": 4},
+            {"label": "Flexão anormal (decorticação)", "value": 3},
+            {"label": "Extensão anormal (descerebração)", "value": 2},
+            {"label": "Ausência total", "value": 1},
+          ],
+        ),
+        _buildQuestion(
+          title: "Reatividade Pupilar (GCS-P)",
+          subtitle: "Penalidade a ser subtraída do total",
+          icon: Icons.remove_red_eye_outlined,
+          iconColor: Colors.green.shade400,
+          value: _glasgowData.pupilar,
+          onChanged: (v) => setState(() => _glasgowData.pupilar = v),
+          options: [
+            {"label": "Ambas reagem (0)", "value": 0},
+            {"label": "Apenas uma reage (-1)", "value": 1},
+            {"label": "Nenhuma reage (-2)", "value": 2},
+          ],
+        ),
+        _buildTotalCard(),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarGlasgow,
+        backgroundColor: _getTotalColor(_glasgowData.total),
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
 
-  Widget _buildSection({
-    required String title,
-    required Color color,
-    required IconData icon,
-    required List<Map<String, dynamic>> options,
-    required int? selectedValue,
-    required Function(int) onChanged,
-  }) {
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: color.withOpacity(0.1),
-        ),
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: color,
-                  child: Icon(icon, color: Colors.white),
+  Widget _buildInfoCard() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(8)),
+            child: const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+          ),
+          title: const Text('Descrição da Escala', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          children: const [
+             Padding(
+                padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: Text(
+                  "A escala avalia três parâmetros: abertura ocular, resposta verbal e resposta motora. O Glasgow com Pupilas (GCS-P) subtrai a reatividade pupilar do total.\n\n"
+                  "Pontuação máxima: 15 (Consciente)\nPontuação mínima: 1 (Coma profundo + pupilas não reativas)",
+                  style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
+                  textAlign: TextAlign.justify,
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            ),
-            const Divider(),
-            ...options.map((op) {
-              return RadioListTile<int>(
-                title: Text(op["label"]),
-                value: op["value"],
-                groupValue: selectedValue,
-                activeColor: color,
-                onChanged: (v) => onChanged(v!),
-              );
-            }),
+              ),
           ],
         ),
       ),
     );
   }
 
+  Widget _buildQuestion({
+    required String title,
+    String? subtitle,
+    required IconData icon,
+    required Color iconColor,
+    required int? value,
+    required List<Map<String, dynamic>> options,
+    required ValueChanged<int> onChanged,
+  }) {
+    List<QuestionOption<int>> optionObjects = options.map((op) {
+      return QuestionOption<int>(label: op['label'], value: op['value']);
+    }).toList();
+
+    return QuestionCard<int?>(
+      title: title,
+      subtitle: subtitle,
+      icon: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(color: iconColor.withOpacity(0.2), shape: BoxShape.circle),
+        child: Icon(icon, color: iconColor, size: 20),
+      ),
+      value: value,
+      options: optionObjects,
+      onChanged: (val) {
+        if (val != null) {
+          onChanged(val);
+          onDataChanged();
+        }
+      },
+    );
+  }
+
   Widget _buildTotalCard() {
-    return Card(
-      color: _getTotalColor(_glasgowData.total),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 6,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const Text(
-              "Pontuação Total (GCS-P)",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24, top: 8),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: _getTotalColor(_glasgowData.total).withOpacity(0.9),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: _getTotalColor(_glasgowData.total).withOpacity(0.3), 
+            blurRadius: 15, 
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const Text(
+            "Pontuação Total (GCS-P)",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            "${_glasgowData.total}",
+            style: const TextStyle(
+              fontSize: 64,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              height: 1,
             ),
-            const SizedBox(height: 6),
-            Text(
-              "${_glasgowData.total} / 15",
-              style: const TextStyle(
-                fontSize: 42,
-                fontWeight: FontWeight.bold,
-              ),
+          ),
+          const Text(
+            "/ 15",
+            style: TextStyle(fontSize: 16, color: Colors.white70),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(height: 6),
-            Text(
+            child: Text(
               _glasgowData.classificacao,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Divider(),
-            const SizedBox(height: 6),
-            Text(
-              _glasgowData.interpretacaoClinica,
-              style: const TextStyle(
-                fontSize: 14,
-                fontStyle: FontStyle.italic,
-              ),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  await _salvarGlasgow();
-                },
-                icon: const Icon(Icons.save),
-                label: const Text('Salvar Escala Glasgow'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      setState(() {
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _glasgowData.interpretacaoClinica,
+            style: const TextStyle(fontSize: 14, color: Colors.white, fontStyle: FontStyle.italic),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton.icon(
+                onPressed: () {
+                     setState(() {
                         _glasgowData.ocular = null;
                         _glasgowData.verbal = null;
                         _glasgowData.motora = null;
                         _glasgowData.pupilar = null;
                       });
                       clearTemporaryData();
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Limpar'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    icon: const Icon(Icons.home),
-                    label: const Text('Voltar'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+                }, 
+                icon: const Icon(Icons.refresh, color: Colors.white70), 
+                label: const Text('Limpar', style: TextStyle(color: Colors.white))
+              ),
+            ],
+          )
+        ],
       ),
     );
   }
 
   Color _getTotalColor(int total) {
-    if (total >= 13) return Colors.green.shade50;
-    if (total >= 9) return Colors.orange.shade50;
-    if (total > 0) return Colors.red.shade50;
-    return Colors.grey.shade200;
+    if (total >= 13) return Colors.green;
+    if (total >= 9) return Colors.orange;
+    if (total >= 3) return Colors.red;
+    return Colors.grey; 
   }
 }

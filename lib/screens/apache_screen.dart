@@ -3,6 +3,7 @@ import '../models/apache_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
 import '../helpers/auto_save_mixin.dart';
+import '../widgets/calculator_scaffold.dart';
 
 class ApacheScreen extends StatefulWidget {
   const ApacheScreen({super.key});
@@ -14,6 +15,20 @@ class _ApacheScreenState extends State<ApacheScreen> with AutoSaveMixin {
   final ApacheData _data = ApacheData();
   
   final TextEditingController _ageCtrl = TextEditingController();
+  final TextEditingController _tempCtrl = TextEditingController();
+  final TextEditingController _mapCtrl = TextEditingController();
+  final TextEditingController _hrCtrl = TextEditingController();
+  final TextEditingController _rrCtrl = TextEditingController();
+  final TextEditingController _paO2Ctrl = TextEditingController();
+  final TextEditingController _aaCtrl = TextEditingController();
+  final TextEditingController _phCtrl = TextEditingController();
+  final TextEditingController _hco3Ctrl = TextEditingController();
+  final TextEditingController _naCtrl = TextEditingController();
+  final TextEditingController _kCtrl = TextEditingController();
+  final TextEditingController _creatCtrl = TextEditingController();
+  final TextEditingController _hctCtrl = TextEditingController();
+  final TextEditingController _wbcCtrl = TextEditingController();
+  final TextEditingController _gcsCtrl = TextEditingController();
 
   @override
   String get scaleName => 'apache';
@@ -108,20 +123,6 @@ class _ApacheScreenState extends State<ApacheScreen> with AutoSaveMixin {
       _updateData();
     }
   }
-  final TextEditingController _tempCtrl = TextEditingController();
-  final TextEditingController _mapCtrl = TextEditingController();
-  final TextEditingController _hrCtrl = TextEditingController();
-  final TextEditingController _rrCtrl = TextEditingController();
-  final TextEditingController _paO2Ctrl = TextEditingController();
-  final TextEditingController _aaCtrl = TextEditingController();
-  final TextEditingController _phCtrl = TextEditingController();
-  final TextEditingController _hco3Ctrl = TextEditingController();
-  final TextEditingController _naCtrl = TextEditingController();
-  final TextEditingController _kCtrl = TextEditingController();
-  final TextEditingController _creatCtrl = TextEditingController();
-  final TextEditingController _hctCtrl = TextEditingController();
-  final TextEditingController _wbcCtrl = TextEditingController();
-  final TextEditingController _gcsCtrl = TextEditingController();
 
   @override
   void dispose() {
@@ -231,199 +232,207 @@ class _ApacheScreenState extends State<ApacheScreen> with AutoSaveMixin {
     final mortalidade = _data.mortalidadeEstimada;
     final interpretacao = _data.interpretacao;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('APACHE II'),
-        centerTitle: true,
-        backgroundColor: Colors.teal,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'APACHE II — Calculadora',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
+    return CalculatorScaffold(
+      title: 'APACHE II',
+      body: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Acute Physiology and Chronic Health Evaluation II\nPreencha os valores fisiológicos das primeiras 24h.',
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'Preencha os valores (valores extremos nas primeiras 24h). Use °C para temperatura.',
-            style: TextStyle(fontSize: 13),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          _buildNumberField('Idade (anos)', _ageCtrl, 'ex: 65'),
-          _buildNumberField('Temperatura (°C)', _tempCtrl, 'ex: 37.0'),
-          _buildNumberField('Pressão arterial média (mmHg)', _mapCtrl, 'ex: 75'),
-          _buildNumberField('Frequência cardíaca (bpm)', _hrCtrl, 'ex: 90'),
-          _buildNumberField('Frequência respiratória (irpm)', _rrCtrl, 'ex: 18'),
-          const SizedBox(height: 8),
-          const Text(
-            'Oxigenação',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-          ),
-          RadioListTile<double>(
-            title: const Text('FiO₂ < 50% (não intubado ou baixa FiO₂)'),
-            value: 0.21,
-            groupValue: _data.fio2,
-            onChanged: (v) {
-              setState(() {
-                _data.fio2 = v ?? 0.21;
-                _updateData();
-              });
-              onDataChanged();
-            },
-            activeColor: Colors.teal,
-          ),
-          RadioListTile<double>(
-            title: const Text('FiO₂ ≥ 50%'),
-            value: 0.5,
-            groupValue: _data.fio2,
-            onChanged: (v) {
-              setState(() {
-                _data.fio2 = v ?? 0.5;
-                _updateData();
-              });
-              onDataChanged();
-            },
-            activeColor: Colors.teal,
-          ),
-          if (_data.fio2 < 0.5)
-            _buildNumberField('PaO₂ (mmHg)', _paO2Ctrl, 'ex: 80'),
-          if (_data.fio2 >= 0.5)
-            _buildNumberField('Gradiente A–a (mmHg)', _aaCtrl, 'ex: 150'),
-          const SizedBox(height: 8),
-          _buildNumberField('pH arterial (use se disponível)', _phCtrl, 'ex: 7.35'),
-          _buildNumberField('HCO₃⁻ (se pH não disponível) mEq/L', _hco3Ctrl, 'ex: 24'),
-          const SizedBox(height: 8),
-          _buildNumberField('Sódio (mEq/L)', _naCtrl, 'ex: 140'),
-          _buildNumberField('Potássio (mEq/L)', _kCtrl, 'ex: 4.2'),
-          _buildNumberField('Creatinina (mg/dL)', _creatCtrl, 'ex: 1.0'),
-          _buildNumberField('Hematócrito (%)', _hctCtrl, 'ex: 40'),
-          _buildNumberField('Leucócitos (×10³/µL)', _wbcCtrl, 'ex: 8'),
-          _buildNumberField('Glasgow Coma Scale (0-15)', _gcsCtrl, 'ex: 15'),
-          const SizedBox(height: 8),
-          const Text(
-            'Problemas de saúde crônicos',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-          ),
-          DropdownButton<int>(
-            value: _data.opcaoCronica,
-            isExpanded: true,
-            items: const [
-              DropdownMenuItem(value: 0, child: Text('Nenhum')),
-              DropdownMenuItem(value: 1, child: Text('Crônico grave — não operatório / pós-op emergente (+5)')),
-              DropdownMenuItem(value: 2, child: Text('Pós-op eletivo (+2)')),
-            ],
-            onChanged: (v) {
-              setState(() {
-                _data.opcaoCronica = v ?? 0;
-              });
-              onDataChanged();
-            },
-          ),
-          const SizedBox(height: 16),
-          Card(
-            color: _getScoreColor(score),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
+
+          _buildSection('Dados Fisiológicos Básicos', [
+            _buildNumberField('Idade', _ageCtrl, 'anos', icon: Icons.person_outline),
+            _buildNumberField('Temperatura', _tempCtrl, '°C', icon: Icons.thermostat),
+            _buildNumberField('Pressão Arterial Média (PAM)', _mapCtrl, 'mmHg', icon: Icons.speed),
+            _buildNumberField('Frequência Cardíaca', _hrCtrl, 'bpm', icon: Icons.favorite_border),
+            _buildNumberField('Frequência Respiratória', _rrCtrl, 'irpm', icon: Icons.air),
+             _buildNumberField('Glasgow Coma Scale', _gcsCtrl, '3-15', icon: Icons.visibility),
+          ]),
+
+          _buildSection('Oxigenação', [
+             Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade200)),
               child: Column(
                 children: [
-                  const Text(
-                    'APACHE II Score',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  RadioListTile<double>(
+                    title: const Text('FiO₂ < 50% (não intubado/baixa FiO₂)', style: TextStyle(fontSize: 14)),
+                    value: 0.21,
+                    groupValue: _data.fio2,
+                    onChanged: (v) {
+                      setState(() {
+                         _data.fio2 = v ?? 0.21;
+                         _updateData();
+                      });
+                      onDataChanged();
+                    },
+                     activeColor: Colors.teal,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '$score',
-                    style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    interpretacao,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Mortalidade estimada: $mortalidade',
-                    style: const TextStyle(fontSize: 13, color: Colors.white70),
-                    textAlign: TextAlign.center,
+                  RadioListTile<double>(
+                    title: const Text('FiO₂ ≥ 50%', style: TextStyle(fontSize: 14)),
+                    value: 0.5,
+                    groupValue: _data.fio2,
+                     onChanged: (v) {
+                      setState(() {
+                         _data.fio2 = v ?? 0.5;
+                         _updateData();
+                      });
+                      onDataChanged();
+                    },
+                     activeColor: Colors.teal,
                   ),
                 ],
               ),
-            ),
-          ),
-          const SizedBox(height: 12),
+             ),
+             if (_data.fio2 < 0.5)
+              _buildNumberField('PaO₂', _paO2Ctrl, 'mmHg'),
+             if (_data.fio2 >= 0.5)
+              _buildNumberField('Gradiente A–a', _aaCtrl, 'mmHg'),
+          ]),
+
+          _buildSection('Metabólico e Renal', [
+             _buildNumberField('pH Arterial', _phCtrl, 'pH'),
+             _buildNumberField('HCO₃⁻', _hco3Ctrl, 'mEq/L'),
+             _buildNumberField('Sódio (Na)', _naCtrl, 'mEq/L'),
+             _buildNumberField('Potássio (K)', _kCtrl, 'mEq/L'),
+             _buildNumberField('Creatinina', _creatCtrl, 'mg/dL'),
+          ]),
+
+          _buildSection('Hematológico', [
+             _buildNumberField('Hematócrito', _hctCtrl, '%'),
+             _buildNumberField('Leucócitos', _wbcCtrl, 'x10³/µL'),
+          ]),
+
+          _buildSection('Doença Crônica', [
+             Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+               child: DropdownButtonHideUnderline(
+                 child: DropdownButton<int>(
+                  value: _data.opcaoCronica,
+                  isExpanded: true,
+                  icon: const Icon(Icons.arrow_drop_down, color: Colors.teal),
+                  items: const [
+                    DropdownMenuItem(value: 0, child: Text('Nenhum problema crônico', style: TextStyle(fontSize: 14))),
+                    DropdownMenuItem(value: 1, child: Text('Crônico grave - Imunossupressão/Cirrose/etc (+5)', style: TextStyle(fontSize: 14))), // Simplified text for space
+                    DropdownMenuItem(value: 2, child: Text('Pós-operatório eletivo (+2)', style: TextStyle(fontSize: 14))),
+                  ],
+                  onChanged: (v) {
+                    setState(() {
+                      _data.opcaoCronica = v ?? 0;
+                    });
+                    onDataChanged();
+                  },
+                               ),
+               ),
+             ), 
+          ]),
+
           Container(
-            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(8),
+              color: _getScoreColor(score),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(score).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Tabela de mortalidade (APACHE-II):',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  '0–4: 4% não cirúrgico / 1% pós-cirúrgico\n5–9: 8% / 3%\n10–14: 15% / 7%\n15–19: 24% / 12%\n20–24: 40% / 30%\n25–29: 55% / 35%\n30–34: ≈73%\n35+: 85% / 88%',
-                  style: TextStyle(fontSize: 11),
-                ),
+                const Text('APACHE II SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                 const SizedBox(height: 8),
                 Text(
-                  'Aviso: este aplicativo é educacional. Para decisões clínicas use ferramentas validadas e protocolos locais.',
-                  style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic, color: Colors.grey.shade700),
+                  '$score',
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                 const SizedBox(height: 4),
+                // Show sub-scores? No, just keep it simple.
+                 Container(
+                   margin: const EdgeInsets.only(top: 12),
+                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                   decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                   child: Column(
+                     children: [
+                       Text(
+                        'Mortalidade Estimada: $mortalidade',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        textAlign: TextAlign.center,
+                      ),
+                       const SizedBox(height: 4),
+                       Text(
+                        interpretacao,
+                        style: const TextStyle(fontSize: 12, color: Colors.white70),
+                        textAlign: TextAlign.center,
+                      ),
+                     ],
+                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarApache();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala APACHE II'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+          
+          const SizedBox(height: 16),
+          Center(
+             child: Text(
+              'Nota: Este aplicativo é para fins educacionais.\nUse julgamento clínico para decisões.',
+              style: TextStyle(color: Colors.grey[500], fontSize: 11, fontStyle: FontStyle.italic),
+              textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.teal,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-        ],
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarApache,
+        backgroundColor: Colors.teal,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
 
-  Widget _buildNumberField(String label, TextEditingController ctrl, String hint) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+  Widget _buildSection(String title, List<Widget> children) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8, top: 16),
+          child: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.teal)),
+        ),
+        ...children,
+      ],
+    );
+  }
+
+  Widget _buildNumberField(String label, TextEditingController ctrl, String suffix, {IconData? icon}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
       child: TextField(
         controller: ctrl,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         decoration: InputDecoration(
           labelText: label,
-          hintText: hint,
-          border: const OutlineInputBorder(),
-          isDense: true,
+          suffixText: suffix,
+          icon: icon != null ? Icon(icon, color: Colors.teal.withOpacity(0.7), size: 20) : null,
+          border: InputBorder.none,
+          labelStyle: TextStyle(color: Colors.grey[600]),
         ),
+        style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2D3748)),
         onChanged: (_) {
           _updateData();
           onDataChanged();

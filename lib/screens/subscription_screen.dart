@@ -395,58 +395,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
                   const SizedBox(height: 16),
                   
-                  // Botão de teste (apenas para desenvolvimento)
-                  Card(
-                    color: Colors.orange.shade50,
-                    elevation: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.bug_report, color: Colors.orange.shade700, size: 20),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Modo de Teste',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.orange.shade700,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton.icon(
-                              onPressed: _isLoading ? null : _simulateTestPurchase,
-                              icon: const Icon(Icons.play_arrow, size: 18),
-                              label: const Text(
-                                'Simular Compra (Teste)',
-                                style: TextStyle(fontSize: 14),
-                              ),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.orange.shade700,
-                                side: BorderSide(color: Colors.orange.shade300),
-                                padding: const EdgeInsets.symmetric(vertical: 10),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Ativa assinatura sem pagamento real',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.orange.shade600,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+
 
                   // Mensagem de erro
                   if (_errorMessage != null) ...[

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -73,6 +74,31 @@ class AuthService {
     }
   }
 
+  // Login com Apple
+  Future<UserCredential?> signInWithApple() async {
+    try {
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+
+      final oauthProvider = OAuthProvider('apple.com');
+      final credential = oauthProvider.credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
+
+      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      return userCredential;
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw 'Erro ao fazer login com Apple: ${e.toString()}';
+    }
+  }
+
   // Logout
   Future<void> signOut() async {
     try {
@@ -102,9 +128,9 @@ class AuthService {
       case 'email-already-in-use':
         return 'Este email já está em uso. Tente fazer login.';
       case 'user-not-found':
-        return 'Nenhum usuário encontrado com este email.';
       case 'wrong-password':
-        return 'Senha incorreta. Tente novamente.';
+      case 'invalid-credential':
+        return 'E-mail ou senha incorretos.';
       case 'invalid-email':
         return 'Email inválido. Verifique o formato.';
       case 'user-disabled':

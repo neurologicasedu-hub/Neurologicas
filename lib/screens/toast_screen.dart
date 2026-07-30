@@ -3,6 +3,8 @@ import '../models/toast_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
 import '../helpers/auto_save_mixin.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class ToastScreen extends StatefulWidget {
   const ToastScreen({super.key});
@@ -64,7 +66,7 @@ class _ToastScreenState extends State<ToastScreen> with AutoSaveMixin {
           'multiplePotentialCauses': _toastData.multiplePotentialCauses,
         },
         resultado: '${_toastData.classificacao} - ${_toastData.razao}',
-        totalScore: null, // TOAST não tem score numérico
+        totalScore: null,
       );
       
       await PatientService.saveCompletedScore(score);
@@ -103,79 +105,72 @@ class _ToastScreenState extends State<ToastScreen> with AutoSaveMixin {
     final classificacao = _toastData.classificacao;
     final razao = _toastData.razao;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Classificação TOAST'),
-        centerTitle: true,
-        backgroundColor: Colors.orange,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Marque achados clínicos e de imagem para chegar à classificação TOAST:',
+    return CalculatorScaffold(
+      title: 'Classificação TOAST',
+      body: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.orange[50], 
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.orange[100]!),
+          ),
+          child: const Text(
+            'Marque achados clínicos e de imagem para determinar a etiologia:',
             style: TextStyle(
               fontSize: 15,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
+              color: Colors.deepOrange,
             ),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 12),
-          
-          _buildSwitchItem(
-            'Fonte cardioembólica maior (ex: FA, trombo LV, prótese)',
-            _toastData.hasMajorCardioembolicSource,
-            (val) {
-              setState(() {
-                _toastData.hasMajorCardioembolicSource = val;
-                if (val) {
+        ),
+
+        QuestionCard<bool>(
+          title: "Achados Cardioembólicos",
+          value: _toastData.hasMajorCardioembolicSource,
+          options: const [QuestionOption(label: 'Fonte cardioembólica maior (ex: FA, trombo LV, prótese)', value: true)],
+          onChanged: (val) {
+            setState(() {
+              _toastData.hasMajorCardioembolicSource = ! _toastData.hasMajorCardioembolicSource; // Toggle behavior
+               if (_toastData.hasMajorCardioembolicSource) {
                   _toastData.ipsilateralCarotidStenosis50 = false;
                   _toastData.lacunarSyndromeClinically = false;
                   _toastData.otherDeterminedCause = false;
                   _toastData.multiplePotentialCauses = false;
                 }
-              });
-              onDataChanged();
-            },
-          ),
-          _buildSwitchItem(
-            'Estenose carotídea ipsilateral >= 50%',
-            _toastData.ipsilateralCarotidStenosis50,
-            (val) {
-              setState(() {
-                _toastData.ipsilateralCarotidStenosis50 = val;
-                if (val) {
+            });
+            onDataChanged();
+          },
+        ),
+
+        QuestionCard<bool>(
+          title: "Aterosclerose de Grandes Vasos",
+          value: _toastData.ipsilateralCarotidStenosis50,
+          options: const [QuestionOption(label: 'Estenose carotídea ipsilateral >= 50%', value: true)],
+          onChanged: (val) {
+             setState(() {
+              _toastData.ipsilateralCarotidStenosis50 = !_toastData.ipsilateralCarotidStenosis50;
+               if (_toastData.ipsilateralCarotidStenosis50) {
                   _toastData.hasMajorCardioembolicSource = false;
                   _toastData.lacunarSyndromeClinically = false;
                 }
-              });
-              onDataChanged();
-            },
-          ),
-          _buildSwitchItem(
-            'Síndrome lacunar clinicamente (ex: paresia motora pura)',
-            _toastData.lacunarSyndromeClinically,
-            (val) {
-              setState(() {
-                _toastData.lacunarSyndromeClinically = val;
-                if (val) {
-                  _toastData.hasMajorCardioembolicSource = false;
-                  _toastData.ipsilateralCarotidStenosis50 = false;
-                }
-              });
-              onDataChanged();
-            },
-          ),
-          
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: TextField(
+            });
+            onDataChanged();
+          },
+        ),
+
+         QuestionCard<bool>(
+          title: "Oclusão de Pequenos Vasos",
+          value: _toastData.lacunarSyndromeClinically,
+          content: TextField(
                 controller: _lesionController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Diâmetro da lesão (mm)',
                   hintText: 'Deixe 0 se desconhecido',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 onChanged: (v) {
@@ -185,171 +180,103 @@ class _ToastScreenState extends State<ToastScreen> with AutoSaveMixin {
                   onDataChanged();
                 },
               ),
-            ),
-          ),
-          
-          _buildSwitchItem(
-            'Outra causa determinada (dissecção, vasculite, trombofilia)',
-            _toastData.otherDeterminedCause,
-            (val) {
-              setState(() {
-                _toastData.otherDeterminedCause = val;
-                if (val) {
+          options: const [QuestionOption(label: 'Síndrome lacunar clínica (ex: paresia motora pura)', value: true)],
+           onChanged: (val) {
+             setState(() {
+              _toastData.lacunarSyndromeClinically = !_toastData.lacunarSyndromeClinically;
+              if (_toastData.lacunarSyndromeClinically) {
+                  _toastData.hasMajorCardioembolicSource = false;
+                  _toastData.ipsilateralCarotidStenosis50 = false;
+                }
+            });
+            onDataChanged();
+          },
+        ),
+
+        QuestionCard<bool>(
+          title: "Outras Etiologias",
+          value: _toastData.otherDeterminedCause,
+          options: const [QuestionOption(label: 'Outra causa determinada (dissecção, vasculite, trombofilia)', value: true)],
+          onChanged: (val) {
+             setState(() {
+              _toastData.otherDeterminedCause = !_toastData.otherDeterminedCause;
+              if (_toastData.otherDeterminedCause) {
                   _toastData.hasMajorCardioembolicSource = false;
                   _toastData.ipsilateralCarotidStenosis50 = false;
                   _toastData.lacunarSyndromeClinically = false;
                 }
-              });
-              onDataChanged();
-            },
-          ),
-          _buildSwitchItem(
-            'Achados múltiplos/confundidores (indeterminado por múltiplas causas)',
-            _toastData.multiplePotentialCauses,
-            (val) {
-              setState(() {
-                _toastData.multiplePotentialCauses = val;
-                if (val) {
+            });
+            onDataChanged();
+          },
+        ),
+
+        QuestionCard<bool>(
+          title: "Indeterminado",
+          value: _toastData.multiplePotentialCauses,
+          options: const [QuestionOption(label: 'Achados múltiplos ou conflitantes', value: true)],
+          onChanged: (val) {
+             setState(() {
+              _toastData.multiplePotentialCauses = !_toastData.multiplePotentialCauses;
+              if (_toastData.multiplePotentialCauses) {
                   _toastData.hasMajorCardioembolicSource = false;
                   _toastData.ipsilateralCarotidStenosis50 = false;
                   _toastData.lacunarSyndromeClinically = false;
                   _toastData.otherDeterminedCause = false;
                 }
-              });
-              onDataChanged();
-            },
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Resultado
-          Card(
-            color: Colors.orange.shade50,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.local_hospital, size: 28, color: Colors.orange.shade700),
-                      const SizedBox(width: 10),
-                      const Text(
-                        'Classificação TOAST',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    classificacao,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.orange.shade700,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  const Divider(),
-                  const SizedBox(height: 10),
-                  Text(
-                    razao,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+            });
+            onDataChanged();
+          },
+        ),
+        
+        // Result Card
+        Container(
+          margin: const EdgeInsets.only(top: 8, bottom: 24),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.orange.shade600,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.orange.shade300,
+                blurRadius: 15,
+                offset: const Offset(0, 8),
               ),
-            ),
+            ],
           ),
-          
-          const SizedBox(height: 12),
-          
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Text(
-              'Observação: TOAST requer interpretação clínica e exames complementares (ECG, ECHO, USG/angiografia). Esta ferramenta automatiza a lógica básica, mas não substitui avaliação médica.',
-              style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
-            ),
-          ),
-          
-          const SizedBox(height: 20),
-          
-          // Botões
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarTOAST();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala TOAST'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
+          child: Column(
             children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  icon: const Icon(Icons.arrow_back),
-                  label: const Text('Voltar'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
+              const Text(
+                'Classificação TOAST',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.popUntil(context, (route) => route.isFirst);
-                  },
-                  icon: const Icon(Icons.home),
-                  label: const Text('Início'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
+              const SizedBox(height: 12),
+              Text(
+                classificacao,
+                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white, height: 1.2),
+                textAlign: TextAlign.center,
+              ),
+               const SizedBox(height: 12),
+               Container(
+                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                 decoration: BoxDecoration(
+                   color: Colors.white.withOpacity(0.2),
+                   borderRadius: BorderRadius.circular(12),
+                 ),
+                 child: Text(
+                  razao,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSwitchItem(String title, bool value, ValueChanged<bool> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: SwitchListTile(
-        title: Text(title, style: const TextStyle(fontSize: 14)),
-        value: value,
-        onChanged: onChanged,
-        activeThumbColor: Colors.orange,
-        dense: true,
+        ),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarTOAST,
+        backgroundColor: Colors.orange.shade700,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/adas_cog_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
 
 class ADASCogScreen extends StatefulWidget {
   const ADASCogScreen({super.key});
@@ -74,46 +75,38 @@ class _ADASCogScreenState extends State<ADASCogScreen> {
   }
 
   Widget _buildTaskItem(int index, Map<String, dynamic> task, int value, ValueChanged<int> onChanged) {
-    final items = [
-      _data.recordacaoPalavras, _data.comandos, _data.nomearObjetos, _data.construcaoFigura,
-      _data.ideacao, _data.orientacao, _data.reconhecimentoPalavras, _data.linguagem,
-      _data.compreensaoLinguagem, _data.encontrarPalavras, _data.tarefasPraxia,
-    ];
-    
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('${index + 1}. ${task['title']}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            if (task['instruction'] != null) ...[
-              const SizedBox(height: 4),
-              Text(task['instruction'], style: TextStyle(fontSize: 9, color: Colors.grey.shade700)),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('${index + 1}. ${task['title']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          if (task['instruction'] != null)
+             Padding(
+               padding: const EdgeInsets.only(top: 4),
+               child: Text(task['instruction'], style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+             ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('0 (sem erros)', style: TextStyle(fontSize: 11)),
+              Text('$value/${task['max']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+              Text('${task['max']} (máx)', style: const TextStyle(fontSize: 11)),
             ],
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('0 (sem erros)', style: TextStyle(fontSize: 10)),
-                Text('${items[index]}/${task['max']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                Text('${task['max']} (máx)', style: const TextStyle(fontSize: 10)),
-              ],
-            ),
-            Slider(
-              value: items[index].toDouble(),
+          ),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(activeTrackColor: Colors.red.shade700, thumbColor: Colors.red.shade700),
+            child: Slider(
+              value: value.toDouble(),
               min: 0,
               max: task['max'].toDouble(),
               divisions: task['max'],
               onChanged: (val) => onChanged(val.toInt()),
-              activeColor: Colors.red.shade700,
             ),
-            const SizedBox(height: 4),
-            Text('⚠️ ADAS-Cog: Quanto maior a pontuação, pior o desempenho', style: TextStyle(fontSize: 9, color: Colors.red.shade700, fontStyle: FontStyle.italic)),
-          ],
-        ),
+          ),
+          const Divider(),
+        ],
       ),
     );
   }
@@ -121,92 +114,75 @@ class _ADASCogScreenState extends State<ADASCogScreen> {
   @override
   Widget build(BuildContext context) {
     final score = _data.totalScore;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('ADAS-Cog'),
-        centerTitle: true,
-        backgroundColor: Colors.red.shade700,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            color: Colors.red.shade50,
-            child: const Padding(
-              padding: EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Importante', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 6),
-                  Text(
-                    'ADAS-Cog avalia erros e dificuldades. QUANTO MAIOR a pontuação, PIOR o desempenho cognitivo.\n'
-                    'Pontuação máxima: 70 (máximo de comprometimento)',
-                    style: TextStyle(fontSize: 11),
-                  ),
-                ],
+    return CalculatorScaffold(
+      title: 'ADAS-Cog',
+      body: [
+          const Padding(
+              padding: EdgeInsets.only(bottom: 16),
+              child: Text(
+                'ADAS-Cog avalia erros e dificuldades.\n⚠️ Quanto MAIOR a pontuação, PIOR o desempenho.',
+                style: TextStyle(color: Colors.red, fontSize: 13, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
               ),
-            ),
           ),
-          ...List.generate(11, (i) {
-            final items = [
-              _data.recordacaoPalavras, _data.comandos, _data.nomearObjetos, _data.construcaoFigura,
-              _data.ideacao, _data.orientacao, _data.reconhecimentoPalavras, _data.linguagem,
-              _data.compreensaoLinguagem, _data.encontrarPalavras, _data.tarefasPraxia,
-            ];
-            final setters = [
-              (v) => setState(() => _data.recordacaoPalavras = v),
-              (v) => setState(() => _data.comandos = v),
-              (v) => setState(() => _data.nomearObjetos = v),
-              (v) => setState(() => _data.construcaoFigura = v),
-              (v) => setState(() => _data.ideacao = v),
-              (v) => setState(() => _data.orientacao = v),
-              (v) => setState(() => _data.reconhecimentoPalavras = v),
-              (v) => setState(() => _data.linguagem = v),
-              (v) => setState(() => _data.compreensaoLinguagem = v),
-              (v) => setState(() => _data.encontrarPalavras = v),
-              (v) => setState(() => _data.tarefasPraxia = v),
-            ];
-            return _buildTaskItem(i, _tasks[i], items[i], setters[i]);
-          }),
-          const SizedBox(height: 16),
+          
           Card(
-            color: score <= 9 ? Colors.green : score <= 18 ? Colors.orange : Colors.red,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               child: Column(
-                children: [
-                  const Text('ADAS-Cog Score', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('$score/70', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  const Text('⚠️ Quanto maior, pior', style: TextStyle(fontSize: 12, color: Colors.white70, fontStyle: FontStyle.italic)),
-                  const SizedBox(height: 12),
-                  Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                ],
+                children: List.generate(11, (i) {
+                  final items = [
+                    _data.recordacaoPalavras, _data.comandos, _data.nomearObjetos, _data.construcaoFigura,
+                    _data.ideacao, _data.orientacao, _data.reconhecimentoPalavras, _data.linguagem,
+                    _data.compreensaoLinguagem, _data.encontrarPalavras, _data.tarefasPraxia,
+                  ];
+                  final setters = [
+                    (v) => setState(() => _data.recordacaoPalavras = v),
+                    (v) => setState(() => _data.comandos = v),
+                    (v) => setState(() => _data.nomearObjetos = v),
+                    (v) => setState(() => _data.construcaoFigura = v),
+                    (v) => setState(() => _data.ideacao = v),
+                    (v) => setState(() => _data.orientacao = v),
+                    (v) => setState(() => _data.reconhecimentoPalavras = v),
+                    (v) => setState(() => _data.linguagem = v),
+                    (v) => setState(() => _data.compreensaoLinguagem = v),
+                    (v) => setState(() => _data.encontrarPalavras = v),
+                    (v) => setState(() => _data.tarefasPraxia = v),
+                  ];
+                  return _buildTaskItem(i, _tasks[i], items[i], setters[i]);
+                }),
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: _salvarADASCog,
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala ADAS-Cog'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+          
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: score <= 9 ? Colors.green : score <= 18 ? Colors.orange : Colors.red,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: (score <= 9 ? Colors.green : score <= 18 ? Colors.orange : Colors.red).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('ADAS-Cog SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text('$score', style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1)),
+                const SizedBox(height: 12),
+                Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white), textAlign: TextAlign.center),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
-        ],
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarADASCog,
+        backgroundColor: Colors.red.shade700,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
 }
-

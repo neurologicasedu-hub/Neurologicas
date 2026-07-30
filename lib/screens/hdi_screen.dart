@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/hdi_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class HDIScreen extends StatefulWidget {
   const HDIScreen({super.key});
@@ -41,15 +43,15 @@ class _HDIScreenState extends State<HDIScreen> {
     'Por causa da minha dor de cabeça, eu não consigo fazer tarefas relacionadas ao trabalho normalmente',
   ];
 
-  final List<String> _options = ['Sim (4 pontos)', 'Às vezes (2 pontos)', 'Não (0 pontos)'];
-  final List<int> _optionValues = [4, 2, 0];
+  final List<String> _options = ['Não (0)', 'Às vezes (2)', 'Sim (4)'];
+  final List<int> _optionValues = [0, 2, 4];
 
   Future<void> _salvarHDI() async {
     try {
       final score = CompletedScore(
         scoreName: 'Headache Disability Inventory (HDI)',
         scoreData: {'respostas': _data.respostas},
-        resultado: '${_data.totalScore}/100 - ${_data.interpretation} (Emocional: ${_data.scoreEmocional}/52, Funcional: ${_data.scoreFuncional}/48)',
+        resultado: '${_data.totalScore}/100 - ${_data.interpretation} (E: ${_data.scoreEmocional}, F: ${_data.scoreFuncional})',
         totalScore: _data.totalScore,
       );
       
@@ -78,88 +80,64 @@ class _HDIScreenState extends State<HDIScreen> {
     }
   }
 
-  Widget _buildQuestionItem(int index, String question, int value, ValueChanged<int> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('${index + 1}. $question', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            ..._options.asMap().entries.map((entry) => RadioListTile<int>(
-              title: Text(entry.value, style: const TextStyle(fontSize: 12)),
-              value: _optionValues[entry.key],
-              groupValue: value,
-              onChanged: (val) => onChanged(val ?? 0),
-              activeColor: Colors.brown,
-              dense: true,
-            )),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final score = _data.totalScore;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('HDI'),
-        centerTitle: true,
-        backgroundColor: Colors.brown,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'HDI - Headache Disability Inventory\nAvalia o impacto da cefaleia na vida diária (25 itens)',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ...List.generate(25, (i) => _buildQuestionItem(i, _questions[i], _data.respostas[i], (v) => setState(() => _data.respostas[i] = v))),
-          const SizedBox(height: 16),
-          Card(
-            color: score <= 24 ? Colors.green : score <= 49 ? Colors.lightGreen : score <= 74 ? Colors.orange : Colors.red,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text('HDI Score', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('$score/100', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('Emocional: ${_data.scoreEmocional}/52', style: const TextStyle(fontSize: 12, color: Colors.white70)),
-                  Text('Funcional: ${_data.scoreFuncional}/48', style: const TextStyle(fontSize: 12, color: Colors.white70)),
-                  const SizedBox(height: 12),
-                  Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                ],
-              ),
+    return CalculatorScaffold(
+      title: 'HDI',
+      body: [
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Headache Disability Inventory\nAvalie o impacto da cefaleia (25 itens)',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+              textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: _salvarHDI,
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala HDI'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+          
+          ...List.generate(_questions.length, (index) {
+             final int val = _data.respostas[index];
+             final String currentLabel = _options[_optionValues.indexOf(val)];
+             return QuestionCard<String>(
+              title: '${index + 1}. ${_questions[index]}',
+              options: _options.map((e) => QuestionOption(label: e, value: e)).toList(),
+              value: currentLabel,
+              onChanged: (v) {
+                final int newVal = _optionValues[_options.indexOf(v)];
+                setState(() => _data.respostas[index] = newVal);
+              },
+            );
+          }),
+
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: score <= 29 ? Colors.green : score <= 59 ? Colors.orange : Colors.red,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: (score <= 29 ? Colors.green : score <= 59 ? Colors.orange : Colors.red).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('HDI SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text('$score', style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1)),
+                const SizedBox(height: 8),
+                Text('Funcional: ${_data.scoreFuncional}  Emocional: ${_data.scoreEmocional}', style: const TextStyle(fontSize: 12, color: Colors.white70)),
+                const SizedBox(height: 12),
+                Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white), textAlign: TextAlign.center),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.brown, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
-        ],
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarHDI,
+        backgroundColor: Colors.brown,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
 }
-

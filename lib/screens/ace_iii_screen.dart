@@ -3,6 +3,8 @@ import '../models/ace_iii_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
 import '../helpers/auto_save_mixin.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class ACEIIIScreen extends StatefulWidget {
   const ACEIIIScreen({super.key});
@@ -19,16 +21,11 @@ class _ACEIIIScreenState extends State<ACEIIIScreen> with AutoSaveMixin {
 
   @override
   Map<String, dynamic> getDataToSave() {
-    // Serializar todos os campos do ACEIIIData
     return _serializeACEIIIData();
   }
 
   Map<String, dynamic> _serializeACEIIIData() {
-    // Retornar um Map com todos os campos do modelo
-    // Como o modelo é complexo, vamos usar reflexão ou salvar campo por campo
-    // Por enquanto, vamos salvar os principais campos que são alterados
     return {
-      // Atenção/Orientação
       'orientacaoTemporal1': _data.orientacaoTemporal1,
       'orientacaoTemporal2': _data.orientacaoTemporal2,
       'orientacaoTemporal3': _data.orientacaoTemporal3,
@@ -37,7 +34,7 @@ class _ACEIIIScreenState extends State<ACEIIIScreen> with AutoSaveMixin {
       'orientacaoEspacial3': _data.orientacaoEspacial3,
       'repeticaoNumeros': _data.repeticaoNumeros,
       'subtracaoSerial': _data.subtracaoSerial,
-      // Memória - Nome e Endereço (aprendizado)
+      // Nome e Endereço
       'nomeEndereco1': _data.nomeEndereco1,
       'nomeEndereco2': _data.nomeEndereco2,
       'nomeEndereco3': _data.nomeEndereco3,
@@ -66,7 +63,7 @@ class _ACEIIIScreenState extends State<ACEIIIScreen> with AutoSaveMixin {
       'recordacaoPalavras4': _data.recordacaoPalavras4,
       'recordacaoPalavras5': _data.recordacaoPalavras5,
       'recordacaoPalavras6': _data.recordacaoPalavras6,
-      // Fluência Verbal
+      // Fluência
       'fluenciaAnimal1': _data.fluenciaAnimal1,
       'fluenciaAnimal2': _data.fluenciaAnimal2,
       'fluenciaAnimal3': _data.fluenciaAnimal3,
@@ -81,9 +78,50 @@ class _ACEIIIScreenState extends State<ACEIIIScreen> with AutoSaveMixin {
       'fluenciaAnimal12': _data.fluenciaAnimal12,
       'fluenciaAnimal13': _data.fluenciaAnimal13,
       'fluenciaAnimal14': _data.fluenciaAnimal14,
-      // Linguagem - continuar com todos os campos...
-      // Por simplicidade, vou salvar apenas uma estrutura básica
-      // e você pode expandir conforme necessário
+      // Linguagem
+      'nomeacaoObjetos1': _data.nomeacaoObjetos1,
+      'nomeacaoObjetos2': _data.nomeacaoObjetos2,
+      'nomeacaoObjetos3': _data.nomeacaoObjetos3,
+      'nomeacaoObjetos4': _data.nomeacaoObjetos4,
+      'nomeacaoObjetos5': _data.nomeacaoObjetos5,
+      'nomeacaoObjetos6': _data.nomeacaoObjetos6,
+      'nomeacaoObjetos7': _data.nomeacaoObjetos7,
+      'nomeacaoObjetos8': _data.nomeacaoObjetos8,
+      'nomeacaoObjetos9': _data.nomeacaoObjetos9,
+      'nomeacaoObjetos10': _data.nomeacaoObjetos10,
+      'nomeacaoObjetos11': _data.nomeacaoObjetos11,
+      'nomeacaoObjetos12': _data.nomeacaoObjetos12,
+      'repeticaoFrases1': _data.repeticaoFrases1,
+      'repeticaoFrases2': _data.repeticaoFrases2,
+      'repeticaoFrases3': _data.repeticaoFrases3,
+      'compreensaoComandos1': _data.compreensaoComandos1,
+      'compreensaoComandos2': _data.compreensaoComandos2,
+      'compreensaoComandos3': _data.compreensaoComandos3,
+      'compreensaoComandos4': _data.compreensaoComandos4,
+      'leitura1': _data.leitura1,
+      'leitura2': _data.leitura2,
+      'leitura3': _data.leitura3,
+      'leitura4': _data.leitura4,
+      'leitura5': _data.leitura5,
+      'leitura6': _data.leitura6,
+      'leitura7': _data.leitura7,
+      // Visuoespacial
+      'copiaFigura1': _data.copiaFigura1,
+      'copiaFigura2': _data.copiaFigura2,
+      'copiaFigura3': _data.copiaFigura3,
+      'copiaFigura4': _data.copiaFigura4,
+      'copiaFigura5': _data.copiaFigura5,
+      'copiaFigura6': _data.copiaFigura6,
+      'copiaFigura7': _data.copiaFigura7,
+      'copiaFigura8': _data.copiaFigura8,
+      'desenhoRelogio1': _data.desenhoRelogio1,
+      'desenhoRelogio2': _data.desenhoRelogio2,
+      'desenhoRelogio3': _data.desenhoRelogio3,
+      'desenhoRelogio4': _data.desenhoRelogio4,
+      'desenhoRelogio5': _data.desenhoRelogio5,
+      'desenhoRelogio6': _data.desenhoRelogio6,
+      'desenhoRelogio7': _data.desenhoRelogio7,
+      'desenhoRelogio8': _data.desenhoRelogio8,
     };
   }
 
@@ -96,8 +134,100 @@ class _ACEIIIScreenState extends State<ACEIIIScreen> with AutoSaveMixin {
     _data.orientacaoEspacial3 = data['orientacaoEspacial3'] ?? 0;
     _data.repeticaoNumeros = data['repeticaoNumeros'] ?? 0;
     _data.subtracaoSerial = data['subtracaoSerial'] ?? 0;
-    // Continuar com todos os campos...
+    
+    _data.nomeEndereco1 = data['nomeEndereco1'] ?? 0;
+    _data.nomeEndereco2 = data['nomeEndereco2'] ?? 0;
+    _data.nomeEndereco3 = data['nomeEndereco3'] ?? 0;
+    _data.nomeEndereco4 = data['nomeEndereco4'] ?? 0;
+    _data.nomeEndereco5 = data['nomeEndereco5'] ?? 0;
+    _data.nomeEndereco6 = data['nomeEndereco6'] ?? 0;
+    _data.nomeEndereco7 = data['nomeEndereco7'] ?? 0;
+    _data.nomeEndereco8 = data['nomeEndereco8'] ?? 0;
+    _data.nomeEndereco9 = data['nomeEndereco9'] ?? 0;
+    _data.nomeEndereco10 = data['nomeEndereco10'] ?? 0;
+
+    _data.recordacaoNomeEndereco1 = data['recordacaoNomeEndereco1'] ?? 0;
+    _data.recordacaoNomeEndereco2 = data['recordacaoNomeEndereco2'] ?? 0;
+    _data.recordacaoNomeEndereco3 = data['recordacaoNomeEndereco3'] ?? 0;
+    _data.recordacaoNomeEndereco4 = data['recordacaoNomeEndereco4'] ?? 0;
+    _data.recordacaoNomeEndereco5 = data['recordacaoNomeEndereco5'] ?? 0;
+    _data.recordacaoNomeEndereco6 = data['recordacaoNomeEndereco6'] ?? 0;
+    _data.recordacaoNomeEndereco7 = data['recordacaoNomeEndereco7'] ?? 0;
+    _data.recordacaoNomeEndereco8 = data['recordacaoNomeEndereco8'] ?? 0;
+    _data.recordacaoNomeEndereco9 = data['recordacaoNomeEndereco9'] ?? 0;
+    _data.recordacaoNomeEndereco10 = data['recordacaoNomeEndereco10'] ?? 0;
+
+    _data.recordacaoPalavras1 = data['recordacaoPalavras1'] ?? 0;
+    _data.recordacaoPalavras2 = data['recordacaoPalavras2'] ?? 0;
+    _data.recordacaoPalavras3 = data['recordacaoPalavras3'] ?? 0;
+    _data.recordacaoPalavras4 = data['recordacaoPalavras4'] ?? 0;
+    _data.recordacaoPalavras5 = data['recordacaoPalavras5'] ?? 0;
+    _data.recordacaoPalavras6 = data['recordacaoPalavras6'] ?? 0;
+
+    _data.fluenciaAnimal1 = data['fluenciaAnimal1'] ?? 0;
+    _data.fluenciaAnimal2 = data['fluenciaAnimal2'] ?? 0;
+    _data.fluenciaAnimal3 = data['fluenciaAnimal3'] ?? 0;
+    _data.fluenciaAnimal4 = data['fluenciaAnimal4'] ?? 0;
+    _data.fluenciaAnimal5 = data['fluenciaAnimal5'] ?? 0;
+    _data.fluenciaAnimal6 = data['fluenciaAnimal6'] ?? 0;
+    _data.fluenciaAnimal7 = data['fluenciaAnimal7'] ?? 0;
+    _data.fluenciaAnimal8 = data['fluenciaAnimal8'] ?? 0;
+    _data.fluenciaAnimal9 = data['fluenciaAnimal9'] ?? 0;
+    _data.fluenciaAnimal10 = data['fluenciaAnimal10'] ?? 0;
+    _data.fluenciaAnimal11 = data['fluenciaAnimal11'] ?? 0;
+    _data.fluenciaAnimal12 = data['fluenciaAnimal12'] ?? 0;
+    _data.fluenciaAnimal13 = data['fluenciaAnimal13'] ?? 0;
+    _data.fluenciaAnimal14 = data['fluenciaAnimal14'] ?? 0;
+
+    _data.nomeacaoObjetos1 = data['nomeacaoObjetos1'] ?? 0;
+    _data.nomeacaoObjetos2 = data['nomeacaoObjetos2'] ?? 0;
+    _data.nomeacaoObjetos3 = data['nomeacaoObjetos3'] ?? 0;
+    _data.nomeacaoObjetos4 = data['nomeacaoObjetos4'] ?? 0;
+    _data.nomeacaoObjetos5 = data['nomeacaoObjetos5'] ?? 0;
+    _data.nomeacaoObjetos6 = data['nomeacaoObjetos6'] ?? 0;
+    _data.nomeacaoObjetos7 = data['nomeacaoObjetos7'] ?? 0;
+    _data.nomeacaoObjetos8 = data['nomeacaoObjetos8'] ?? 0;
+    _data.nomeacaoObjetos9 = data['nomeacaoObjetos9'] ?? 0;
+    _data.nomeacaoObjetos10 = data['nomeacaoObjetos10'] ?? 0;
+    _data.nomeacaoObjetos11 = data['nomeacaoObjetos11'] ?? 0;
+    _data.nomeacaoObjetos12 = data['nomeacaoObjetos12'] ?? 0;
+
+    _data.repeticaoFrases1 = data['repeticaoFrases1'] ?? 0;
+    _data.repeticaoFrases2 = data['repeticaoFrases2'] ?? 0;
+    _data.repeticaoFrases3 = data['repeticaoFrases3'] ?? 0;
+
+    _data.compreensaoComandos1 = data['compreensaoComandos1'] ?? 0;
+    _data.compreensaoComandos2 = data['compreensaoComandos2'] ?? 0;
+    _data.compreensaoComandos3 = data['compreensaoComandos3'] ?? 0;
+    _data.compreensaoComandos4 = data['compreensaoComandos4'] ?? 0;
+
+    _data.leitura1 = data['leitura1'] ?? 0;
+    _data.leitura2 = data['leitura2'] ?? 0;
+    _data.leitura3 = data['leitura3'] ?? 0;
+    _data.leitura4 = data['leitura4'] ?? 0;
+    _data.leitura5 = data['leitura5'] ?? 0;
+    _data.leitura6 = data['leitura6'] ?? 0;
+    _data.leitura7 = data['leitura7'] ?? 0;
+
+    _data.copiaFigura1 = data['copiaFigura1'] ?? 0;
+    _data.copiaFigura2 = data['copiaFigura2'] ?? 0;
+    _data.copiaFigura3 = data['copiaFigura3'] ?? 0;
+    _data.copiaFigura4 = data['copiaFigura4'] ?? 0;
+    _data.copiaFigura5 = data['copiaFigura5'] ?? 0;
+    _data.copiaFigura6 = data['copiaFigura6'] ?? 0;
+    _data.copiaFigura7 = data['copiaFigura7'] ?? 0;
+    _data.copiaFigura8 = data['copiaFigura8'] ?? 0;
+
+    _data.desenhoRelogio1 = data['desenhoRelogio1'] ?? 0;
+    _data.desenhoRelogio2 = data['desenhoRelogio2'] ?? 0;
+    _data.desenhoRelogio3 = data['desenhoRelogio3'] ?? 0;
+    _data.desenhoRelogio4 = data['desenhoRelogio4'] ?? 0;
+    _data.desenhoRelogio5 = data['desenhoRelogio5'] ?? 0;
+    _data.desenhoRelogio6 = data['desenhoRelogio6'] ?? 0;
+    _data.desenhoRelogio7 = data['desenhoRelogio7'] ?? 0;
+    _data.desenhoRelogio8 = data['desenhoRelogio8'] ?? 0;
   }
+
 
   @override
   Future<void> restoreData(Map<String, dynamic> data) async {
@@ -151,478 +281,311 @@ class _ACEIIIScreenState extends State<ACEIIIScreen> with AutoSaveMixin {
     }
   }
 
-  Widget _buildInstructionCard(String title, String instruction) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      color: Colors.blue.shade50,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.info_outline, size: 18, color: Colors.blue.shade800),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              instruction,
-              style: TextStyle(fontSize: 11, color: Colors.blue.shade900),
-            ),
+  Widget _buildGroupCard({required String title, String? subtitle, required List<Widget> children}) {
+     return Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
           ],
         ),
-      ),
-    );
+        child: Column(
+           crossAxisAlignment: CrossAxisAlignment.start,
+           children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              if (subtitle != null) ...[
+                 const SizedBox(height: 4),
+                 Text(subtitle, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+              ],
+              const SizedBox(height: 12),
+              ...children,
+           ],
+        ),
+     );
   }
 
-  Widget _buildCheckboxItem(String title, String instruction, int value, ValueChanged<int> onChanged) {
-    return Column(
-      children: [
-        if (instruction.isNotEmpty) _buildInstructionCard(title, instruction),
-        CheckboxListTile(
-          title: Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-          value: value == 1,
-          onChanged: (val) {
-            onChanged(val == true ? 1 : 0);
-            onDataChanged();
-          },
-          activeColor: Colors.teal,
-          dense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        ),
-      ],
+  Widget _buildSwitchTile(String title, bool value, ValueChanged<bool> onChanged) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: value ? const Color(0xFF00A896).withOpacity(0.1) : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: value ? const Color(0xFF00A896) : Colors.grey.withOpacity(0.2)),
+      ),
+      child: SwitchListTile(
+        title: Text(title, style: TextStyle(fontSize: 14, fontWeight: value ? FontWeight.bold : FontWeight.normal)),
+        value: value,
+        onChanged: onChanged,
+        activeColor: const Color(0xFF00A896),
+        dense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final score = _data.totalScore;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('ACE-III - Addenbrooke\'s Cognitive Examination'),
-        centerTitle: true,
-        backgroundColor: Colors.teal,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Card(
-            color: Colors.teal.shade50,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
+    return CalculatorScaffold(
+      title: 'ACE-III',
+      body: [
+          Container(
+             margin: const EdgeInsets.only(bottom: 24),
+             padding: const EdgeInsets.all(20),
+             decoration: BoxDecoration(color: Colors.teal.shade50, borderRadius: BorderRadius.circular(20)),
+             child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Icon(Icons.psychology, color: Colors.teal.shade700, size: 24),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'ACE-III - Avaliação Cognitiva Abrangente',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Escala de 0 a 100 pontos que avalia 5 domínios cognitivos:\n'
-                    '• Atenção/Orientação (18 pontos)\n'
-                    '• Memória (26 pontos)\n'
-                    '• Fluência Verbal (14 pontos)\n'
-                    '• Linguagem (26 pontos)\n'
-                    '• Visuoespacial (16 pontos)',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Score Total: $score/100',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.teal.shade700),
-                  ),
+                   const Text(
+                     'Avaliação Cognitiva Abrangente',
+                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal),
+                   ),
+                   const SizedBox(height: 8),
+                   const Text(
+                     'Escala de 0 a 100 pontos que avalia 5 domínios cognitivos.\nPreencha com atenção.',
+                     style: TextStyle(fontSize: 14, color: Colors.teal),
+                   ),
+                   const SizedBox(height: 12),
+                   Text(
+                    'Score Total: ${_data.totalScore}/100',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.teal.shade700),
+                   ),
                 ],
-              ),
-            ),
+             ),
           ),
-          const SizedBox(height: 16),
+
+          _buildGroupCard(
+            title: 'Atenção/Orientação (${_data.scoreAtencao}/18)',
+            subtitle: 'Orientações Temporal e Espacial + Atenção',
+            children: [
+               const Text('Tempo', style: TextStyle(fontWeight: FontWeight.bold)),
+               _buildSwitchTile('Ano', _data.orientacaoTemporal1 == 1, (v) => setState(() => _data.orientacaoTemporal1 = v ? 1 : 0)),
+               _buildSwitchTile('Mês', _data.orientacaoTemporal2 == 1, (v) => setState(() => _data.orientacaoTemporal2 = v ? 1 : 0)),
+               _buildSwitchTile('Dia', _data.orientacaoTemporal3 == 1, (v) => setState(() => _data.orientacaoTemporal3 = v ? 1 : 0)),
+               const SizedBox(height: 8),
+               const Text('Espaço', style: TextStyle(fontWeight: FontWeight.bold)),
+               _buildSwitchTile('Cidade', _data.orientacaoEspacial1 == 1, (v) => setState(() => _data.orientacaoEspacial1 = v ? 1 : 0)),
+               _buildSwitchTile('Estado', _data.orientacaoEspacial2 == 1, (v) => setState(() => _data.orientacaoEspacial2 = v ? 1 : 0)),
+               _buildSwitchTile('Lugar', _data.orientacaoEspacial3 == 1, (v) => setState(() => _data.orientacaoEspacial3 = v ? 1 : 0)),
+               const SizedBox(height: 8),
+               const Text('Repetição de Números', style: TextStyle(fontWeight: FontWeight.bold)),
+               _buildSwitchTile('Repetiu Sequência', _data.repeticaoNumeros == 1, (v) => setState(() => _data.repeticaoNumeros = v ? 1 : 0)),
+               _buildSwitchTile('Subtração Serial (100-7) ≥ 2 acertos', _data.subtracaoSerial == 1, (v) => setState(() => _data.subtracaoSerial = v ? 1 : 0)),
+            ]
+          ),
+
+          _buildGroupCard(
+            title: 'Memória (${_data.scoreMemoria}/26)',
+            subtitle: 'Nome e Endereço + Recordação',
+            children: [
+               const Text('Aprendizado (Nome e Endereço)', style: TextStyle(fontWeight: FontWeight.bold)),
+               _buildSwitchTile('João', _data.nomeEndereco1 == 1, (v) => setState(() => _data.nomeEndereco1 = v ? 1 : 0)),
+               _buildSwitchTile('Silva', _data.nomeEndereco2 == 1, (v) => setState(() => _data.nomeEndereco2 = v ? 1 : 0)),
+               _buildSwitchTile('Rua das Flores', _data.nomeEndereco3 == 1, (v) => setState(() => _data.nomeEndereco3 = v ? 1 : 0)),
+               _buildSwitchTile('42', _data.nomeEndereco4 == 1, (v) => setState(() => _data.nomeEndereco4 = v ? 1 : 0)),
+               _buildSwitchTile('Centro', _data.nomeEndereco5 == 1, (v) => setState(() => _data.nomeEndereco5 = v ? 1 : 0)),
+               _buildSwitchTile('São Paulo', _data.nomeEndereco6 == 1, (v) => setState(() => _data.nomeEndereco6 = v ? 1 : 0)),
+               _buildSwitchTile('Repetição 2 (Nome)', _data.nomeEndereco7 == 1, (v) => setState(() => _data.nomeEndereco7 = v ? 1 : 0)),
+               _buildSwitchTile('Repetição 2 (Endereço)', _data.nomeEndereco8 == 1, (v) => setState(() => _data.nomeEndereco8 = v ? 1 : 0)),
+               _buildSwitchTile('Repetição 3 (Nome)', _data.nomeEndereco9 == 1, (v) => setState(() => _data.nomeEndereco9 = v ? 1 : 0)),
+               _buildSwitchTile('Repetição 3 (Endereço)', _data.nomeEndereco10 == 1, (v) => setState(() => _data.nomeEndereco10 = v ? 1 : 0)),
+               
+               const SizedBox(height: 8),
+               const Text('Recordação Tardia', style: TextStyle(fontWeight: FontWeight.bold)),
+               _buildSwitchTile('Jodão (Rec)', _data.recordacaoNomeEndereco1 == 1, (v) => setState(() => _data.recordacaoNomeEndereco1 = v ? 1 : 0)),
+               _buildSwitchTile('Silva (Rec)', _data.recordacaoNomeEndereco2 == 1, (v) => setState(() => _data.recordacaoNomeEndereco2 = v ? 1 : 0)),
+               _buildSwitchTile('R. das Flores (Rec)', _data.recordacaoNomeEndereco3 == 1, (v) => setState(() => _data.recordacaoNomeEndereco3 = v ? 1 : 0)),
+               _buildSwitchTile('42 (Rec)', _data.recordacaoNomeEndereco4 == 1, (v) => setState(() => _data.recordacaoNomeEndereco4 = v ? 1 : 0)),
+               _buildSwitchTile('Centro (Rec)', _data.recordacaoNomeEndereco5 == 1, (v) => setState(() => _data.recordacaoNomeEndereco5 = v ? 1 : 0)),
+               _buildSwitchTile('S. Paulo (Rec)', _data.recordacaoNomeEndereco6 == 1, (v) => setState(() => _data.recordacaoNomeEndereco6 = v ? 1 : 0)),
+             
+               const SizedBox(height: 8),
+               const Text('Recordação de Palavras', style: TextStyle(fontWeight: FontWeight.bold)),
+               _buildSwitchTile('CASA', _data.recordacaoPalavras1 == 1, (v) => setState(() => _data.recordacaoPalavras1 = v ? 1 : 0)),
+               _buildSwitchTile('MESA', _data.recordacaoPalavras2 == 1, (v) => setState(() => _data.recordacaoPalavras2 = v ? 1 : 0)),
+               _buildSwitchTile('GATO', _data.recordacaoPalavras3 == 1, (v) => setState(() => _data.recordacaoPalavras3 = v ? 1 : 0)),
+               _buildSwitchTile('CARRO', _data.recordacaoPalavras4 == 1, (v) => setState(() => _data.recordacaoPalavras4 = v ? 1 : 0)),
+               _buildSwitchTile('ÁRVORE', _data.recordacaoPalavras5 == 1, (v) => setState(() => _data.recordacaoPalavras5 = v ? 1 : 0)),
+               _buildSwitchTile('SOL', _data.recordacaoPalavras6 == 1, (v) => setState(() => _data.recordacaoPalavras6 = v ? 1 : 0)),
+            ]
+          ),
           
-          // ATENÇÃO/ORIENTAÇÃO
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 2,
-            child: ExpansionTile(
-              leading: Icon(Icons.access_time, color: Colors.teal.shade700),
-              title: Text('Atenção/Orientação (${_data.scoreAtencao}/18)', 
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-              subtitle: const Text('Orientações temporal e espacial + Atenção', style: TextStyle(fontSize: 11)),
-              children: [
-                _buildInstructionCard(
-                  'Orientações Temporais',
-                  'Pergunte ao paciente: "Que ano estamos? Que mês estamos? Que dia do mês é hoje?"\n'
-                  'Marque como correto se responder com precisão (±1 dia para o dia do mês).'
-                ),
-                _buildCheckboxItem(
-                  'Ano',
-                  '',
-                  _data.orientacaoTemporal1,
-                  (val) => setState(() => _data.orientacaoTemporal1 = val),
-                ),
-                _buildCheckboxItem(
-                  'Mês',
-                  '',
-                  _data.orientacaoTemporal2,
-                  (val) => setState(() => _data.orientacaoTemporal2 = val),
-                ),
-                _buildCheckboxItem(
-                  'Dia do mês',
-                  '',
-                  _data.orientacaoTemporal3,
-                  (val) => setState(() => _data.orientacaoTemporal3 = val),
-                ),
-                _buildInstructionCard(
-                  'Orientações Espaciais',
-                  'Pergunte ao paciente: "Em que cidade estamos? Em que estado? Em que hospital/clínica?"\n'
-                  'Marque como correto se responder com precisão.'
-                ),
-                _buildCheckboxItem(
-                  'Cidade',
-                  '',
-                  _data.orientacaoEspacial1,
-                  (val) => setState(() => _data.orientacaoEspacial1 = val),
-                ),
-                _buildCheckboxItem(
-                  'Estado',
-                  '',
-                  _data.orientacaoEspacial2,
-                  (val) => setState(() => _data.orientacaoEspacial2 = val),
-                ),
-                _buildCheckboxItem(
-                  'Hospital/Clínica',
-                  '',
-                  _data.orientacaoEspacial3,
-                  (val) => setState(() => _data.orientacaoEspacial3 = val),
-                ),
-                _buildInstructionCard(
-                  'Repetição de Números',
-                  'Diga: "Vou dizer alguns números. Por favor, repita-os exatamente como eu disser."\n'
-                  'Leia: "8-2-6" (aguarde resposta). Se acertar, leia: "7-4-9-1" (aguarde resposta).\n'
-                  'Se acertar, leia: "5-3-8-2-9" (aguarde resposta).\n'
-                  'Marque como correto se repetir pelo menos uma sequência corretamente.'
-                ),
-                _buildCheckboxItem(
-                  'Repetição de Números',
-                  '',
-                  _data.repeticaoNumeros,
-                  (val) => setState(() => _data.repeticaoNumeros = val),
-                ),
-                _buildInstructionCard(
-                  'Subtração Serial',
-                  'Diga: "Vou pedir para você fazer algumas subtrações. Comece com 100 e subtraia 7. Depois continue subtraindo 7 do resultado."\n'
-                  'Pergunte: "100 menos 7 é quanto?" (Resposta: 93)\n'
-                  'Se acertar: "E 93 menos 7?" (Resposta: 86)\n'
-                  'Se acertar: "E 86 menos 7?" (Resposta: 79)\n'
-                  'Marque como correto se acertar pelo menos 2 das 3 subtrações.'
-                ),
-                _buildCheckboxItem(
-                  'Subtração Serial (100-7)',
-                  '',
-                  _data.subtracaoSerial,
-                  (val) => setState(() => _data.subtracaoSerial = val),
-                ),
-              ],
-            ),
+          _buildGroupCard(
+              title: 'Fluência Verbal (${_data.scoreFluencia}/14)',
+              children: List.generate(14, (index) => _buildSwitchTile('Animal ${index + 1}', 
+                  _data.checkFluencia(index), 
+                  (v) => setState(() => _data.setFluencia(index, v ? 1 : 0))
+              )),
           ),
 
-          // MEMÓRIA
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 2,
-            child: ExpansionTile(
-              leading: Icon(Icons.memory, color: Colors.teal.shade700),
-              title: Text('Memória (${_data.scoreMemoria}/26)', 
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-              subtitle: const Text('Nome e endereço + Recordação de palavras', style: TextStyle(fontSize: 11)),
+          _buildGroupCard(
+              title: 'Linguagem (${_data.scoreLinguagem}/26)',
               children: [
-                _buildInstructionCard(
-                  'Nome e Endereço - Aprendizado (10 pontos)',
-                  'Diga: "Vou ler um nome e endereço. Preste atenção porque depois vou pedir para você repetir."\n'
-                  'Leia: "João Silva, Rua das Flores, número 42, Bairro Centro, São Paulo"\n'
-                  'Pergunte: "Agora me diga o nome e endereço que acabei de ler."\n'
-                  'Dê 1 ponto para cada elemento lembrado: João (1), Silva (1), Rua das Flores (1), 42 (1), '
-                  'Bairro Centro (1), São Paulo (1). Se repetir tudo corretamente na primeira tentativa, marque todos os 10 pontos.\n'
-                  'Se não, peça para repetir até 3 vezes. Marque os pontos conforme lembrar.'
-                ),
-                _buildCheckboxItem('Nome: João', '', _data.nomeEndereco1, (val) => setState(() => _data.nomeEndereco1 = val)),
-                _buildCheckboxItem('Sobrenome: Silva', '', _data.nomeEndereco2, (val) => setState(() => _data.nomeEndereco2 = val)),
-                _buildCheckboxItem('Rua: Rua das Flores', '', _data.nomeEndereco3, (val) => setState(() => _data.nomeEndereco3 = val)),
-                _buildCheckboxItem('Número: 42', '', _data.nomeEndereco4, (val) => setState(() => _data.nomeEndereco4 = val)),
-                _buildCheckboxItem('Bairro: Centro', '', _data.nomeEndereco5, (val) => setState(() => _data.nomeEndereco5 = val)),
-                _buildCheckboxItem('Cidade: São Paulo', '', _data.nomeEndereco6, (val) => setState(() => _data.nomeEndereco6 = val)),
-                _buildCheckboxItem('Repetição 2: Nome', '', _data.nomeEndereco7, (val) => setState(() => _data.nomeEndereco7 = val)),
-                _buildCheckboxItem('Repetição 2: Endereço', '', _data.nomeEndereco8, (val) => setState(() => _data.nomeEndereco8 = val)),
-                _buildCheckboxItem('Repetição 3: Nome', '', _data.nomeEndereco9, (val) => setState(() => _data.nomeEndereco9 = val)),
-                _buildCheckboxItem('Repetição 3: Endereço', '', _data.nomeEndereco10, (val) => setState(() => _data.nomeEndereco10 = val)),
-                const SizedBox(height: 8),
-                _buildInstructionCard(
-                  'Recordação Tardia - Nome e Endereço (10 pontos)',
-                  'Após 5-10 minutos de outras tarefas, pergunte: "Você lembra do nome e endereço que eu li antes?"\n'
-                  'Dê 1 ponto para cada elemento lembrado sem pistas.'
-                ),
-                _buildCheckboxItem('Recordação: João', '', _data.recordacaoNomeEndereco1, (val) => setState(() => _data.recordacaoNomeEndereco1 = val)),
-                _buildCheckboxItem('Recordação: Silva', '', _data.recordacaoNomeEndereco2, (val) => setState(() => _data.recordacaoNomeEndereco2 = val)),
-                _buildCheckboxItem('Recordação: Rua das Flores', '', _data.recordacaoNomeEndereco3, (val) => setState(() => _data.recordacaoNomeEndereco3 = val)),
-                _buildCheckboxItem('Recordação: 42', '', _data.recordacaoNomeEndereco4, (val) => setState(() => _data.recordacaoNomeEndereco4 = val)),
-                _buildCheckboxItem('Recordação: Centro', '', _data.recordacaoNomeEndereco5, (val) => setState(() => _data.recordacaoNomeEndereco5 = val)),
-                _buildCheckboxItem('Recordação: São Paulo', '', _data.recordacaoNomeEndereco6, (val) => setState(() => _data.recordacaoNomeEndereco6 = val)),
-                _buildCheckboxItem('Recordação 7', '', _data.recordacaoNomeEndereco7, (val) => setState(() => _data.recordacaoNomeEndereco7 = val)),
-                _buildCheckboxItem('Recordação 8', '', _data.recordacaoNomeEndereco8, (val) => setState(() => _data.recordacaoNomeEndereco8 = val)),
-                _buildCheckboxItem('Recordação 9', '', _data.recordacaoNomeEndereco9, (val) => setState(() => _data.recordacaoNomeEndereco9 = val)),
-                _buildCheckboxItem('Recordação 10', '', _data.recordacaoNomeEndereco10, (val) => setState(() => _data.recordacaoNomeEndereco10 = val)),
-                const SizedBox(height: 8),
-                _buildInstructionCard(
-                  'Recordação de Palavras (6 pontos)',
-                  'Diga: "Vou ler uma lista de palavras. Preste atenção porque depois vou pedir para você repetir."\n'
-                  'Leia as palavras pausadamente: "CASA, MESA, GATO, CARRO, ÁRVORE, SOL"\n'
-                  'Pergunte: "Agora me diga quais palavras você lembra."\n'
-                  'Dê 1 ponto para cada palavra lembrada (máximo 6 pontos).'
-                ),
-                _buildCheckboxItem('Palavra: CASA', '', _data.recordacaoPalavras1, (val) => setState(() => _data.recordacaoPalavras1 = val)),
-                _buildCheckboxItem('Palavra: MESA', '', _data.recordacaoPalavras2, (val) => setState(() => _data.recordacaoPalavras2 = val)),
-                _buildCheckboxItem('Palavra: GATO', '', _data.recordacaoPalavras3, (val) => setState(() => _data.recordacaoPalavras3 = val)),
-                _buildCheckboxItem('Palavra: CARRO', '', _data.recordacaoPalavras4, (val) => setState(() => _data.recordacaoPalavras4 = val)),
-                _buildCheckboxItem('Palavra: ÁRVORE', '', _data.recordacaoPalavras5, (val) => setState(() => _data.recordacaoPalavras5 = val)),
-                _buildCheckboxItem('Palavra: SOL', '', _data.recordacaoPalavras6, (val) => setState(() => _data.recordacaoPalavras6 = val)),
-              ],
-            ),
-          ),
-
-          // FLUÊNCIA VERBAL
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 2,
-            child: ExpansionTile(
-              leading: Icon(Icons.chat_bubble_outline, color: Colors.teal.shade700),
-              title: Text('Fluência Verbal (${_data.scoreFluencia}/14)', 
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-              subtitle: const Text('Nomear animais em 1 minuto', style: TextStyle(fontSize: 11)),
-              children: [
-                _buildInstructionCard(
-                  'Fluência Verbal - Animais',
-                  'Diga: "Agora vou pedir para você nomear o máximo de animais que conseguir em 1 minuto. '
-                  'Pode ser qualquer animal - doméstico, selvagem, do mar, do ar. Não valem nomes próprios de animais. '
-                  'Comece quando eu disser agora."\n'
-                  'Diga "AGORA" e inicie um cronômetro de 1 minuto.\n'
-                  'Marque 1 ponto para cada animal nomeado corretamente (máximo 14 pontos).\n'
-                  'NÃO conte: repetições, variações (ex: gato, gatinho = 1 só), nomes próprios, ou palavras que não são animais.'
-                ),
-                _buildCheckboxItem('Animal 1', '', _data.fluenciaAnimal1, (val) => setState(() => _data.fluenciaAnimal1 = val)),
-                _buildCheckboxItem('Animal 2', '', _data.fluenciaAnimal2, (val) => setState(() => _data.fluenciaAnimal2 = val)),
-                _buildCheckboxItem('Animal 3', '', _data.fluenciaAnimal3, (val) => setState(() => _data.fluenciaAnimal3 = val)),
-                _buildCheckboxItem('Animal 4', '', _data.fluenciaAnimal4, (val) => setState(() => _data.fluenciaAnimal4 = val)),
-                _buildCheckboxItem('Animal 5', '', _data.fluenciaAnimal5, (val) => setState(() => _data.fluenciaAnimal5 = val)),
-                _buildCheckboxItem('Animal 6', '', _data.fluenciaAnimal6, (val) => setState(() => _data.fluenciaAnimal6 = val)),
-                _buildCheckboxItem('Animal 7', '', _data.fluenciaAnimal7, (val) => setState(() => _data.fluenciaAnimal7 = val)),
-                _buildCheckboxItem('Animal 8', '', _data.fluenciaAnimal8, (val) => setState(() => _data.fluenciaAnimal8 = val)),
-                _buildCheckboxItem('Animal 9', '', _data.fluenciaAnimal9, (val) => setState(() => _data.fluenciaAnimal9 = val)),
-                _buildCheckboxItem('Animal 10', '', _data.fluenciaAnimal10, (val) => setState(() => _data.fluenciaAnimal10 = val)),
-                _buildCheckboxItem('Animal 11', '', _data.fluenciaAnimal11, (val) => setState(() => _data.fluenciaAnimal11 = val)),
-                _buildCheckboxItem('Animal 12', '', _data.fluenciaAnimal12, (val) => setState(() => _data.fluenciaAnimal12 = val)),
-                _buildCheckboxItem('Animal 13', '', _data.fluenciaAnimal13, (val) => setState(() => _data.fluenciaAnimal13 = val)),
-                _buildCheckboxItem('Animal 14', '', _data.fluenciaAnimal14, (val) => setState(() => _data.fluenciaAnimal14 = val)),
-              ],
-            ),
-          ),
-
-          // LINGUAGEM
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 2,
-            child: ExpansionTile(
-              leading: Icon(Icons.language, color: Colors.teal.shade700),
-              title: Text('Linguagem (${_data.scoreLinguagem}/26)', 
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-              subtitle: const Text('Nomeação, repetição, compreensão, leitura', style: TextStyle(fontSize: 11)),
-              children: [
-                _buildInstructionCard(
-                  'Nomeação de Objetos (12 pontos)',
-                  'Mostre imagens ou objetos reais e peça: "O que é isto?" ou "Qual o nome deste objeto?"\n'
-                  'Use 12 objetos: Relógio, Caneta, Chave, Garfo, Lápis, Óculos, Cadeira, Mesa, Livro, Copo, Garrafa, Bola.\n'
-                  'Marque 1 ponto para cada nomeação correta.'
-                ),
-                _buildCheckboxItem('Objeto 1 (ex: Relógio)', '', _data.nomeacaoObjetos1, (val) => setState(() => _data.nomeacaoObjetos1 = val)),
-                _buildCheckboxItem('Objeto 2 (ex: Caneta)', '', _data.nomeacaoObjetos2, (val) => setState(() => _data.nomeacaoObjetos2 = val)),
-                _buildCheckboxItem('Objeto 3 (ex: Chave)', '', _data.nomeacaoObjetos3, (val) => setState(() => _data.nomeacaoObjetos3 = val)),
-                _buildCheckboxItem('Objeto 4 (ex: Garfo)', '', _data.nomeacaoObjetos4, (val) => setState(() => _data.nomeacaoObjetos4 = val)),
-                _buildCheckboxItem('Objeto 5 (ex: Lápis)', '', _data.nomeacaoObjetos5, (val) => setState(() => _data.nomeacaoObjetos5 = val)),
-                _buildCheckboxItem('Objeto 6 (ex: Óculos)', '', _data.nomeacaoObjetos6, (val) => setState(() => _data.nomeacaoObjetos6 = val)),
-                _buildCheckboxItem('Objeto 7 (ex: Cadeira)', '', _data.nomeacaoObjetos7, (val) => setState(() => _data.nomeacaoObjetos7 = val)),
-                _buildCheckboxItem('Objeto 8 (ex: Mesa)', '', _data.nomeacaoObjetos8, (val) => setState(() => _data.nomeacaoObjetos8 = val)),
-                _buildCheckboxItem('Objeto 9 (ex: Livro)', '', _data.nomeacaoObjetos9, (val) => setState(() => _data.nomeacaoObjetos9 = val)),
-                _buildCheckboxItem('Objeto 10 (ex: Copo)', '', _data.nomeacaoObjetos10, (val) => setState(() => _data.nomeacaoObjetos10 = val)),
-                _buildCheckboxItem('Objeto 11 (ex: Garrafa)', '', _data.nomeacaoObjetos11, (val) => setState(() => _data.nomeacaoObjetos11 = val)),
-                _buildCheckboxItem('Objeto 12 (ex: Bola)', '', _data.nomeacaoObjetos12, (val) => setState(() => _data.nomeacaoObjetos12 = val)),
-                const SizedBox(height: 8),
-                _buildInstructionCard(
-                  'Repetição de Frases (3 pontos)',
-                  'Diga: "Vou dizer uma frase. Por favor, repita exatamente como eu disser."\n'
-                  'Frases: 1) "O gato está dormindo no sofá" (1 ponto)\n'
-                  '2) "A menina comprou flores na feira" (1 ponto)\n'
-                  '3) "O médico receitou remédios para a paciente" (1 ponto)\n'
-                  'Marque 1 ponto se repetir corretamente (tolerância para pequenos erros gramaticais).'
-                ),
-                _buildCheckboxItem('Repetição: Frase 1', '', _data.repeticaoFrases1, (val) => setState(() => _data.repeticaoFrases1 = val)),
-                _buildCheckboxItem('Repetição: Frase 2', '', _data.repeticaoFrases2, (val) => setState(() => _data.repeticaoFrases2 = val)),
-                _buildCheckboxItem('Repetição: Frase 3', '', _data.repeticaoFrases3, (val) => setState(() => _data.repeticaoFrases3 = val)),
-                _buildInstructionCard(
-                  'Compreensão de Comandos (4 pontos)',
-                  'Diga: "Agora vou pedir para você fazer algumas coisas. Faça exatamente o que eu pedir."\n'
-                  'Comandos: 1) "Feche os olhos" (1 ponto)\n'
-                  '2) "Toque no nariz com o dedo indicador" (1 ponto)\n'
-                  '3) "Coloque a mão direita no ombro esquerdo" (1 ponto)\n'
-                  '4) "Aponte para a porta e depois para a janela" (1 ponto)\n'
-                  'Marque 1 ponto se executar corretamente.'
-                ),
-                _buildCheckboxItem('Comando 1: Fechar olhos', '', _data.compreensaoComandos1, (val) => setState(() => _data.compreensaoComandos1 = val)),
-                _buildCheckboxItem('Comando 2: Tocar nariz', '', _data.compreensaoComandos2, (val) => setState(() => _data.compreensaoComandos2 = val)),
-                _buildCheckboxItem('Comando 3: Mão direita no ombro esquerdo', '', _data.compreensaoComandos3, (val) => setState(() => _data.compreensaoComandos3 = val)),
-                _buildCheckboxItem('Comando 4: Apontar porta e janela', '', _data.compreensaoComandos4, (val) => setState(() => _data.compreensaoComandos4 = val)),
-                _buildInstructionCard(
-                  'Leitura (7 pontos)',
-                  'Mostre uma frase escrita e peça: "Por favor, leia esta frase em voz alta."\n'
-                  'Frases: 1) "O gato está dormindo" (1 ponto)\n'
-                  '2) "A menina comprou flores" (1 ponto)\n'
-                  '3) "O médico receitou remédios" (1 ponto)\n'
-                  '4) "A casa tem jardim" (1 ponto)\n'
-                  '5) "O carro está na garagem" (1 ponto)\n'
-                  '6) "A mãe fez bolo" (1 ponto)\n'
-                  '7) "O pai comprou presente" (1 ponto)\n'
-                  'Marque 1 ponto se ler corretamente.'
-                ),
-                _buildCheckboxItem('Leitura: Frase 1', '', _data.leitura1, (val) => setState(() => _data.leitura1 = val)),
-                _buildCheckboxItem('Leitura: Frase 2', '', _data.leitura2, (val) => setState(() => _data.leitura2 = val)),
-                _buildCheckboxItem('Leitura: Frase 3', '', _data.leitura3, (val) => setState(() => _data.leitura3 = val)),
-                _buildCheckboxItem('Leitura: Frase 4', '', _data.leitura4, (val) => setState(() => _data.leitura4 = val)),
-                _buildCheckboxItem('Leitura: Frase 5', '', _data.leitura5, (val) => setState(() => _data.leitura5 = val)),
-                _buildCheckboxItem('Leitura: Frase 6', '', _data.leitura6, (val) => setState(() => _data.leitura6 = val)),
-                _buildCheckboxItem('Leitura: Frase 7', '', _data.leitura7, (val) => setState(() => _data.leitura7 = val)),
-              ],
-            ),
-          ),
-
-          // VISOESPACIAL
-          Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            elevation: 2,
-            child: ExpansionTile(
-              leading: Icon(Icons.draw, color: Colors.teal.shade700),
-              title: Text('Visuoespacial (${_data.scoreVisuoespacial}/16)', 
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-              subtitle: const Text('Cópia de figuras + Desenho do relógio', style: TextStyle(fontSize: 11)),
-              children: [
-                _buildInstructionCard(
-                  'Cópia de Figuras (8 pontos)',
-                  'Mostre uma figura geométrica e peça: "Por favor, copie esta figura exatamente como está aqui."\n'
-                  'Use figuras: Círculo (1 ponto), Quadrado (1 ponto), Triângulo (1 ponto), '
-                  'Losango (1 ponto), Pentágono (1 ponto), Hexágono (1 ponto), Estrela (1 ponto), Cruz (1 ponto).\n'
-                  'Marque 1 ponto se copiar corretamente (tolerância para pequenas imperfeições).'
-                ),
-                _buildCheckboxItem('Cópia: Figura 1 (Círculo)', '', _data.copiaFigura1, (val) => setState(() => _data.copiaFigura1 = val)),
-                _buildCheckboxItem('Cópia: Figura 2 (Quadrado)', '', _data.copiaFigura2, (val) => setState(() => _data.copiaFigura2 = val)),
-                _buildCheckboxItem('Cópia: Figura 3 (Triângulo)', '', _data.copiaFigura3, (val) => setState(() => _data.copiaFigura3 = val)),
-                _buildCheckboxItem('Cópia: Figura 4 (Losango)', '', _data.copiaFigura4, (val) => setState(() => _data.copiaFigura4 = val)),
-                _buildCheckboxItem('Cópia: Figura 5 (Pentágono)', '', _data.copiaFigura5, (val) => setState(() => _data.copiaFigura5 = val)),
-                _buildCheckboxItem('Cópia: Figura 6 (Hexágono)', '', _data.copiaFigura6, (val) => setState(() => _data.copiaFigura6 = val)),
-                _buildCheckboxItem('Cópia: Figura 7 (Estrela)', '', _data.copiaFigura7, (val) => setState(() => _data.copiaFigura7 = val)),
-                _buildCheckboxItem('Cópia: Figura 8 (Cruz)', '', _data.copiaFigura8, (val) => setState(() => _data.copiaFigura8 = val)),
-                const SizedBox(height: 8),
-                _buildInstructionCard(
-                  'Desenho do Relógio (8 pontos)',
-                  'Diga: "Desenhe um relógio completo. O relógio deve ter todos os números e os ponteiros devem marcar 10 horas e 10 minutos."\n'
-                  'Critérios de pontuação:\n'
-                  '1) Círculo do relógio (1 ponto)\n'
-                  '2) Todos os 12 números presentes (1 ponto)\n'
-                  '3) Números na posição correta (1 ponto)\n'
-                  '4) Ponteiro das horas (1 ponto)\n'
-                  '5) Ponteiro dos minutos (1 ponto)\n'
-                  '6) Horas corretas (10h) (1 ponto)\n'
-                  '7) Minutos corretos (10min) (1 ponto)\n'
-                  '8) Relógio completo e funcional (1 ponto)'
-                ),
-                _buildCheckboxItem('Relógio: Círculo', '', _data.desenhoRelogio1, (val) => setState(() => _data.desenhoRelogio1 = val)),
-                _buildCheckboxItem('Relógio: 12 números', '', _data.desenhoRelogio2, (val) => setState(() => _data.desenhoRelogio2 = val)),
-                _buildCheckboxItem('Relógio: Números posição correta', '', _data.desenhoRelogio3, (val) => setState(() => _data.desenhoRelogio3 = val)),
-                _buildCheckboxItem('Relógio: Ponteiro horas', '', _data.desenhoRelogio4, (val) => setState(() => _data.desenhoRelogio4 = val)),
-                _buildCheckboxItem('Relógio: Ponteiro minutos', '', _data.desenhoRelogio5, (val) => setState(() => _data.desenhoRelogio5 = val)),
-                _buildCheckboxItem('Relógio: Horas corretas (10h)', '', _data.desenhoRelogio6, (val) => setState(() => _data.desenhoRelogio6 = val)),
-                _buildCheckboxItem('Relógio: Minutos corretos (10min)', '', _data.desenhoRelogio7, (val) => setState(() => _data.desenhoRelogio7 = val)),
-                _buildCheckboxItem('Relógio: Completo e funcional', '', _data.desenhoRelogio8, (val) => setState(() => _data.desenhoRelogio8 = val)),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-          
-          // CARD DE RESULTADO
-          Card(
-            color: score >= 88 ? Colors.green : score >= 82 ? Colors.orange.shade300 : score >= 70 ? Colors.orange : Colors.red,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Text('ACE-III Score: $score/100', 
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                  const Text('Nomeação (12 itens)', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ...List.generate(12, (index) => _buildSwitchTile('Objeto ${index + 1}', _data.checkNomeacao(index), (v) => setState(() => _data.setNomeacao(index, v ? 1 : 0)))),
                   const SizedBox(height: 8),
-                  Text(
-                    'Atenção: ${_data.scoreAtencao}/18 | Memória: ${_data.scoreMemoria}/26 | Fluência: ${_data.scoreFluencia}/14\n'
-                    'Linguagem: ${_data.scoreLinguagem}/26 | Visuoespacial: ${_data.scoreVisuoespacial}/16',
-                    style: const TextStyle(fontSize: 12, color: Colors.white),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
+                  const Text('Repetição', style: TextStyle(fontWeight: FontWeight.bold)),
+                  _buildSwitchTile('Frase 1', _data.repeticaoFrases1 == 1, (v) => setState(() => _data.repeticaoFrases1 = v ? 1 : 0)),
+                  _buildSwitchTile('Frase 2', _data.repeticaoFrases2 == 1, (v) => setState(() => _data.repeticaoFrases2 = v ? 1 : 0)),
+                  _buildSwitchTile('Frase 3', _data.repeticaoFrases3 == 1, (v) => setState(() => _data.repeticaoFrases3 = v ? 1 : 0)),
+                  const SizedBox(height: 8),
+                  const Text('Comandos', style: TextStyle(fontWeight: FontWeight.bold)),
+                  _buildSwitchTile('C1 (Olhos)', _data.compreensaoComandos1 == 1, (v) => setState(() => _data.compreensaoComandos1 = v ? 1 : 0)),
+                  _buildSwitchTile('C2 (Nariz)', _data.compreensaoComandos2 == 1, (v) => setState(() => _data.compreensaoComandos2 = v ? 1 : 0)),
+                  _buildSwitchTile('C3 (Ombro)', _data.compreensaoComandos3 == 1, (v) => setState(() => _data.compreensaoComandos3 = v ? 1 : 0)),
+                  _buildSwitchTile('C4 (Porta/Janela)', _data.compreensaoComandos4 == 1, (v) => setState(() => _data.compreensaoComandos4 = v ? 1 : 0)),
+                  const SizedBox(height: 8),
+                  const Text('Leitura', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ...List.generate(7, (index) => _buildSwitchTile('Frase ${index + 1}', _data.checkLeitura(index), (v) => setState(() => _data.setLeitura(index, v ? 1 : 0)))),
+              ]
+          ),
+          
+          _buildGroupCard(
+              title: 'Visuoespacial (${_data.scoreVisuoespacial}/16)',
+              children: [
+                   const Text('Cópia (8 figuras)', style: TextStyle(fontWeight: FontWeight.bold)),
+                   ...List.generate(8, (index) => _buildSwitchTile('Figura ${index + 1}', _data.checkCopia(index), (v) => setState(() => _data.setCopia(index, v ? 1 : 0)))),
+                   const SizedBox(height: 8),
+                   const Text('Relógio (8 critérios)', style: TextStyle(fontWeight: FontWeight.bold)),
+                   ...List.generate(8, (index) => _buildSwitchTile('Critério ${index + 1}', _data.checkRelogio(index), (v) => setState(() => _data.setRelogio(index, v ? 1 : 0)))),
+              ]
+          ),
+
+           // Result Container
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _getScoreColor(_data.totalScore),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(_data.totalScore).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('PONTUAÇÃO TOTAL', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  '${_data.totalScore}',
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                const Text(
+                  '/ 100',
+                  style: TextStyle(fontSize: 18, color: Colors.white70),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                   decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                   child: Text(
                     _data.interpretation,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
                     textAlign: TextAlign.center,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarACEIII();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala ACE-III'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              minimumSize: const Size(double.infinity, 50),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.teal,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              minimumSize: const Size(double.infinity, 50),
-            ),
-          ),
-        ],
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarACEIII,
+        backgroundColor: Colors.teal,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
+
+  Color _getScoreColor(int score) {
+    if (score >= 88) return Colors.green;
+    if (score >= 82) return Colors.orange.shade300;
+    if (score >= 70) return Colors.orange;
+    return Colors.red;
+  }
+}
+
+// Extension helpers to clean up duplicate map logic
+extension ACEDataHelpers on ACEIIIData {
+    bool checkFluencia(int index) {
+        switch(index) {
+            case 0: return fluenciaAnimal1 == 1;
+            case 1: return fluenciaAnimal2 == 1;
+            case 2: return fluenciaAnimal3 == 1;
+            case 3: return fluenciaAnimal4 == 1;
+            case 4: return fluenciaAnimal5 == 1;
+            case 5: return fluenciaAnimal6 == 1;
+            case 6: return fluenciaAnimal7 == 1;
+            case 7: return fluenciaAnimal8 == 1;
+            case 8: return fluenciaAnimal9 == 1;
+            case 9: return fluenciaAnimal10 == 1;
+            case 10: return fluenciaAnimal11 == 1;
+            case 11: return fluenciaAnimal12 == 1;
+            case 12: return fluenciaAnimal13 == 1;
+            case 13: return fluenciaAnimal14 == 1;
+            default: return false;
+        }
+    }
+    void setFluencia(int index, int val) {
+        switch(index) {
+            case 0: fluenciaAnimal1 = val; break;
+            case 1: fluenciaAnimal2 = val; break;
+            case 2: fluenciaAnimal3 = val; break;
+            case 3: fluenciaAnimal4 = val; break;
+            case 4: fluenciaAnimal5 = val; break;
+            case 5: fluenciaAnimal6 = val; break;
+            case 6: fluenciaAnimal7 = val; break;
+            case 7: fluenciaAnimal8 = val; break;
+            case 8: fluenciaAnimal9 = val; break;
+            case 9: fluenciaAnimal10 = val; break;
+            case 10: fluenciaAnimal11 = val; break;
+            case 11: fluenciaAnimal12 = val; break;
+            case 12: fluenciaAnimal13 = val; break;
+            case 13: fluenciaAnimal14 = val; break;
+        }
+    }
+    
+    // ... helpers for others can be similar or inline map. kept simpler for now to avoid massive file growth if not strictly needed.
+    // Actually implementing them inline is cleaner than giant case statement manually in View.
+    
+    bool checkNomeacao(int index) {
+        List<int> vals = [nomeacaoObjetos1, nomeacaoObjetos2, nomeacaoObjetos3, nomeacaoObjetos4, nomeacaoObjetos5, nomeacaoObjetos6, nomeacaoObjetos7, nomeacaoObjetos8, nomeacaoObjetos9, nomeacaoObjetos10, nomeacaoObjetos11, nomeacaoObjetos12];
+        return vals[index] == 1;
+    }
+    void setNomeacao(int index, int val) {
+        if(index==0) nomeacaoObjetos1=val; else if(index==1) nomeacaoObjetos2=val; else if(index==2) nomeacaoObjetos3=val;
+        else if(index==3) nomeacaoObjetos4=val; else if(index==4) nomeacaoObjetos5=val; else if(index==5) nomeacaoObjetos6=val;
+        else if(index==6) nomeacaoObjetos7=val; else if(index==7) nomeacaoObjetos8=val; else if(index==8) nomeacaoObjetos9=val;
+        else if(index==9) nomeacaoObjetos10=val; else if(index==10) nomeacaoObjetos11=val; else if(index==11) nomeacaoObjetos12=val;
+    }
+
+    bool checkLeitura(int index) {
+        List<int> vals = [leitura1, leitura2, leitura3, leitura4, leitura5, leitura6, leitura7];
+        return vals[index] == 1;
+    }
+    void setLeitura(int index, int val) {
+         if(index==0) leitura1=val; else if(index==1) leitura2=val; else if(index==2) leitura3=val; else if(index==3) leitura4=val;
+         else if(index==4) leitura5=val; else if(index==5) leitura6=val; else if(index==6) leitura7=val;
+    }
+
+    bool checkCopia(int index) {
+         List<int> vals = [copiaFigura1, copiaFigura2, copiaFigura3, copiaFigura4, copiaFigura5, copiaFigura6, copiaFigura7, copiaFigura8];
+         return vals[index] == 1;
+    }
+    void setCopia(int index, int val) {
+         if(index==0) copiaFigura1=val; else if(index==1) copiaFigura2=val; else if(index==2) copiaFigura3=val; else if(index==3) copiaFigura4=val;
+         else if(index==4) copiaFigura5=val; else if(index==5) copiaFigura6=val; else if(index==6) copiaFigura7=val; else if(index==7) copiaFigura8=val;
+    }
+
+    bool checkRelogio(int index) {
+         List<int> vals = [desenhoRelogio1, desenhoRelogio2, desenhoRelogio3, desenhoRelogio4, desenhoRelogio5, desenhoRelogio6, desenhoRelogio7, desenhoRelogio8];
+         return vals[index] == 1;
+    }
+    void setRelogio(int index, int val) {
+         if(index==0) desenhoRelogio1=val; else if(index==1) desenhoRelogio2=val; else if(index==2) desenhoRelogio3=val; else if(index==3) desenhoRelogio4=val;
+         else if(index==4) desenhoRelogio5=val; else if(index==5) desenhoRelogio6=val; else if(index==6) desenhoRelogio7=val; else if(index==7) desenhoRelogio8=val;
+    }
 }

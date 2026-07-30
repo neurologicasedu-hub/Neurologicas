@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/mrc_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class MRCScreen extends StatefulWidget {
   const MRCScreen({super.key});
@@ -65,125 +67,121 @@ class _MRCScreenState extends State<MRCScreen> {
     }
   }
 
-  Widget _buildSliderItem(String title, int value, ValueChanged<int> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(_data.mrcDescription(value), style: const TextStyle(fontSize: 12)),
-                ),
-                Text('$value/5', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+  @override
+  Widget build(BuildContext context) {
+    final avgScore = _data.averageScore;
+    return CalculatorScaffold(
+      title: 'Força Muscular (MRC)',
+      body: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Escala de Força Muscular (0-5) para membros superiores e inferiores.',
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          _buildSectionHeader('Membros Superiores (Direito)'),
+          _buildQuestion('Ombro (Abdução) - D', _data.ombroDireito, (v) => setState(() => _data.ombroDireito = v)),
+          _buildQuestion('Cotovelo (Flexão) - D', _data.cotoveloDireito, (v) => setState(() => _data.cotoveloDireito = v)),
+          _buildQuestion('Punho (Extensão) - D', _data.punhoDireito, (v) => setState(() => _data.punhoDireito = v)),
+
+          _buildSectionHeader('Membros Superiores (Esquerdo)'),
+          _buildQuestion('Ombro (Abdução) - E', _data.ombroEsquerdo, (v) => setState(() => _data.ombroEsquerdo = v)),
+          _buildQuestion('Cotovelo (Flexão) - E', _data.cotoveloEsquerdo, (v) => setState(() => _data.cotoveloEsquerdo = v)),
+          _buildQuestion('Punho (Extensão) - E', _data.punhoEsquerdo, (v) => setState(() => _data.punhoEsquerdo = v)),
+
+          _buildSectionHeader('Membros Inferiores (Direito)'),
+          _buildQuestion('Quadril (Flexão) - D', _data.quadrilDireito, (v) => setState(() => _data.quadrilDireito = v)),
+          _buildQuestion('Joelho (Extensão) - D', _data.joelhoDireito, (v) => setState(() => _data.joelhoDireito = v)),
+          _buildQuestion('Tornozelo (Dorsiflexão) - D', _data.tornozeloDireito, (v) => setState(() => _data.tornozeloDireito = v)),
+
+          _buildSectionHeader('Membros Inferiores (Esquerdo)'),
+          _buildQuestion('Quadril (Flexão) - E', _data.quadrilEsquerdo, (v) => setState(() => _data.quadrilEsquerdo = v)),
+          _buildQuestion('Joelho (Extensão) - E', _data.joelhoEsquerdo, (v) => setState(() => _data.joelhoEsquerdo = v)),
+          _buildQuestion('Tornozelo (Dorsiflexão) - E', _data.tornozeloEsquerdo, (v) => setState(() => _data.tornozeloEsquerdo = v)),
+
+          // Result Card
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _getScoreColor(avgScore),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(avgScore).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
               ],
             ),
-            Slider(
-              value: value.toDouble(),
-              min: 0,
-              max: 5,
-              divisions: 5,
-              onChanged: (val) => onChanged(val.toInt()),
-              activeColor: Colors.green,
+            child: Column(
+              children: [
+                const Text('SCORE MÉDIO', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  avgScore.toStringAsFixed(2),
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                const Text(
+                  '/ 5.0',
+                  style: TextStyle(fontSize: 18, color: Colors.white70),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                   decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                   child: Text(
+                    _data.interpretation,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarMRC,
+        backgroundColor: Colors.green,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, bottom: 12, top: 16),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          color: Colors.green.shade800,
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+          letterSpacing: 1.0,
         ),
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final avgScore = _data.averageScore;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('MRC Scale - Força Muscular'),
-        centerTitle: true,
-        backgroundColor: Colors.green,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Medical Research Council Scale for Muscle Strength',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Avalie a força muscular de 0 (sem contração) a 5 (força normal)',
-            style: TextStyle(fontSize: 12),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          const Text('Membros Superiores', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          _buildSliderItem('Ombro Esquerdo (Abdução)', _data.ombroEsquerdo, (val) => setState(() => _data.ombroEsquerdo = val)),
-          _buildSliderItem('Ombro Direito (Abdução)', _data.ombroDireito, (val) => setState(() => _data.ombroDireito = val)),
-          _buildSliderItem('Cotovelo Esquerdo (Flexão)', _data.cotoveloEsquerdo, (val) => setState(() => _data.cotoveloEsquerdo = val)),
-          _buildSliderItem('Cotovelo Direito (Flexão)', _data.cotoveloDireito, (val) => setState(() => _data.cotoveloDireito = val)),
-          _buildSliderItem('Punho Esquerdo (Extensão)', _data.punhoEsquerdo, (val) => setState(() => _data.punhoEsquerdo = val)),
-          _buildSliderItem('Punho Direito (Extensão)', _data.punhoDireito, (val) => setState(() => _data.punhoDireito = val)),
-          const SizedBox(height: 12),
-          const Text('Membros Inferiores', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          _buildSliderItem('Quadril Esquerdo (Flexão)', _data.quadrilEsquerdo, (val) => setState(() => _data.quadrilEsquerdo = val)),
-          _buildSliderItem('Quadril Direito (Flexão)', _data.quadrilDireito, (val) => setState(() => _data.quadrilDireito = val)),
-          _buildSliderItem('Joelho Esquerdo (Extensão)', _data.joelhoEsquerdo, (val) => setState(() => _data.joelhoEsquerdo = val)),
-          _buildSliderItem('Joelho Direito (Extensão)', _data.joelhoDireito, (val) => setState(() => _data.joelhoDireito = val)),
-          _buildSliderItem('Tornozelo Esquerdo (Dorsiflexão)', _data.tornozeloEsquerdo, (val) => setState(() => _data.tornozeloEsquerdo = val)),
-          _buildSliderItem('Tornozelo Direito (Dorsiflexão)', _data.tornozeloDireito, (val) => setState(() => _data.tornozeloDireito = val)),
-          const SizedBox(height: 16),
-          Card(
-            color: avgScore >= 4.5 ? Colors.green : avgScore >= 3.0 ? Colors.orange : Colors.red,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text('Score Médio MRC', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('${avgScore.toStringAsFixed(2)}/5.0', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarMRC();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala MRC'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green.shade700,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-        ],
-      ),
+  Widget _buildQuestion(String title, int value, ValueChanged<int> onChanged) {
+    return QuestionCard<int>(
+      title: title,
+      value: value,
+      onChanged: onChanged,
+      options: const [
+        QuestionOption(label: '5 - Normal (100%)', value: 5),
+        QuestionOption(label: '4 - Vence resist. (75%)', value: 4),
+        QuestionOption(label: '3 - Vence gravidade (50%)', value: 3),
+        QuestionOption(label: '2 - Sem gravidade (25%)', value: 2),
+        QuestionOption(label: '1 - Traço cont. (10%)', value: 1),
+        QuestionOption(label: '0 - Nenhuma (0%)', value: 0),
+      ],
     );
+  }
+
+  Color _getScoreColor(double score) {
+    if (score >= 4.5) return Colors.green;
+    if (score >= 3.0) return Colors.orange;
+    return Colors.red;
   }
 }

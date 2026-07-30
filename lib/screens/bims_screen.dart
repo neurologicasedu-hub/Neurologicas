@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/bims_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
 
 class BIMSScreen extends StatefulWidget {
   const BIMSScreen({super.key});
@@ -58,65 +59,53 @@ class _BIMSScreenState extends State<BIMSScreen> {
   }
 
   Widget _buildCheckboxItem(String title, String instruction, int value, ValueChanged<int> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            if (instruction.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(instruction, style: TextStyle(fontSize: 10, color: Colors.grey.shade700)),
-            ],
-            const SizedBox(height: 8),
-            CheckboxListTile(
-              title: const Text('Correto (1 ponto)', style: TextStyle(fontSize: 12)),
-              value: value == 1,
-              onChanged: (val) => onChanged(val == true ? 1 : 0),
-              activeColor: Colors.blue,
-            ),
-          ],
+    return Column(
+      children: [
+        CheckboxListTile(
+          title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          subtitle: instruction.isNotEmpty ? Text(instruction, style: const TextStyle(fontSize: 11, color: Colors.grey)) : null,
+          value: value == 1,
+          onChanged: (val) => onChanged(val == true ? 1 : 0),
+          activeColor: Colors.blue,
+          controlAffinity: ListTileControlAffinity.trailing,
         ),
-      ),
+        const Divider(),
+      ],
     );
   }
 
   Widget _buildSliderItem(String title, String instruction, int value, int max, ValueChanged<int> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            if (instruction.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(instruction, style: TextStyle(fontSize: 10, color: Colors.grey.shade700)),
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+          if (instruction.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(instruction, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+          ],
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('0', style: TextStyle(fontSize: 11)),
+              Text('$value/$max', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+              Text('$max', style: const TextStyle(fontSize: 11)),
             ],
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('0', style: TextStyle(fontSize: 10)),
-                Text('$value/$max', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                Text('$max', style: const TextStyle(fontSize: 10)),
-              ],
-            ),
-            Slider(
+          ),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(activeTrackColor: Colors.blue, thumbColor: Colors.blue),
+            child: Slider(
               value: value.toDouble(),
               min: 0,
               max: max.toDouble(),
               divisions: max,
               onChanged: (val) => onChanged(val.toInt()),
-              activeColor: Colors.blue,
             ),
-          ],
-        ),
+          ),
+          const Divider(),
+        ],
       ),
     );
   }
@@ -124,77 +113,70 @@ class _BIMSScreenState extends State<BIMSScreen> {
   @override
   Widget build(BuildContext context) {
     final score = _data.totalScore;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('BIMS'),
-        centerTitle: true,
-        backgroundColor: Colors.blue,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'BIMS - Brief Interview for Mental Status\nAvaliação cognitiva breve para pacientes institucionalizados',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          _buildSliderItem(
-            '1. Repetição de Palavras',
-            'Peça ao paciente para repetir 3 palavras (ex: "maçã, mesa, moeda"). Pontue cada palavra corretamente repetida.',
-            _data.repetirPalavras,
-            3,
-            (v) => setState(() => _data.repetirPalavras = v),
-          ),
-          _buildCheckboxItem('2. Ano', 'Pergunte: "Que ano é este?"', _data.ano, (v) => setState(() => _data.ano = v)),
-          _buildCheckboxItem('3. Mês', 'Pergunte: "Que mês é este?"', _data.mes, (v) => setState(() => _data.mes = v)),
-          _buildCheckboxItem('4. Recordação Palavra 1', 'Pergunte: "Lembra-se da primeira palavra?" (sem dar pistas)', _data.recordacao1, (v) => setState(() => _data.recordacao1 = v)),
-          _buildCheckboxItem('5. Recordação Palavra 2', 'Pergunte: "Lembra-se da segunda palavra?"', _data.recordacao2, (v) => setState(() => _data.recordacao2 = v)),
-          _buildCheckboxItem('6. Recordação Palavra 3', 'Pergunte: "Lembra-se da terceira palavra?"', _data.recordacao3, (v) => setState(() => _data.recordacao3 = v)),
-          _buildCheckboxItem('7. Dia da Semana', 'Pergunte: "Que dia da semana é hoje?"', _data.diaSemana, (v) => setState(() => _data.diaSemana = v)),
-          _buildCheckboxItem('8. Nomear Dois Objetos', 'Mostre 2 objetos comuns e peça para nomeá-los', _data.nomeDoisObjetos, (v) => setState(() => _data.nomeDoisObjetos = v)),
-          _buildSliderItem(
-            '9. Comandos',
-            'Diga: "Pegue este papel com a mão direita" e "Dobre o papel ao meio". Pontue cada comando executado corretamente.',
-            _data.comandos,
-            2,
-            (v) => setState(() => _data.comandos = v),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            color: score >= 13 ? Colors.green : score >= 8 ? Colors.orange : Colors.red,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text('BIMS Score', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('$score/15', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                ],
-              ),
+    return CalculatorScaffold(
+      title: 'BIMS',
+      body: [
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Avaliação cognitiva breve para pacientes institucionalizados',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+              textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: _salvarBIMS,
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala BIMS'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+          
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Column(
+              children: [
+                _buildSliderItem(
+                  '1. Repetição de Palavras',
+                  'Repetir 3 palavras. Pontue cada correta.',
+                  _data.repetirPalavras, 3, (v) => setState(() => _data.repetirPalavras = v),
+                ),
+                _buildCheckboxItem('2. Ano', 'Que ano é este?', _data.ano, (v) => setState(() => _data.ano = v)),
+                _buildCheckboxItem('3. Mês', 'Que mês é este?', _data.mes, (v) => setState(() => _data.mes = v)),
+                _buildCheckboxItem('4. Recordação Palavra 1', 'Lembra da 1ª palavra?', _data.recordacao1, (v) => setState(() => _data.recordacao1 = v)),
+                _buildCheckboxItem('5. Recordação Palavra 2', 'Lembra da 2ª palavra?', _data.recordacao2, (v) => setState(() => _data.recordacao2 = v)),
+                _buildCheckboxItem('6. Recordação Palavra 3', 'Lembra da 3ª palavra?', _data.recordacao3, (v) => setState(() => _data.recordacao3 = v)),
+                _buildCheckboxItem('7. Dia da Semana', 'Que dia é hoje?', _data.diaSemana, (v) => setState(() => _data.diaSemana = v)),
+                _buildCheckboxItem('8. Nomear Dois Objetos', 'Nomear 2 objetos mostrados', _data.nomeDoisObjetos, (v) => setState(() => _data.nomeDoisObjetos = v)),
+                _buildSliderItem(
+                  '9. Comandos',
+                  'Pegar papel mão direita + Dobrar ao meio.',
+                  _data.comandos, 2, (v) => setState(() => _data.comandos = v),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+          
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: score >= 13 ? Colors.green : score >= 8 ? Colors.orange : Colors.red,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: (score >= 13 ? Colors.green : score >= 8 ? Colors.orange : Colors.red).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('BIMS SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text('$score', style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1)),
+                const SizedBox(height: 12),
+                Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white), textAlign: TextAlign.center),
+              ],
+            ),
           ),
-        ],
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarBIMS,
+        backgroundColor: Colors.blue,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
 }
-

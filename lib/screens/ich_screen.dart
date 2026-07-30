@@ -3,6 +3,8 @@ import '../models/ich_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
 import '../helpers/auto_save_mixin.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class ICHScreen extends StatefulWidget {
   const ICHScreen({super.key});
@@ -106,126 +108,144 @@ class _ICHScreenState extends State<ICHScreen> with AutoSaveMixin {
     final score = _data.totalScore;
     final interpretacao = _data.interpretacao;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('ICH Score'),
-        centerTitle: true,
-        backgroundColor: Colors.deepPurpleAccent,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Intracerebral Hemorrhage Score',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          _buildRadioItem('Idade', ['< 80 anos (0)', '80-89 anos (1)', '≥ 90 anos (2)'], _data.idade, (val) {
-            setState(() => _data.idade = val);
-            onDataChanged();
-          }),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _volumeController,
-            decoration: const InputDecoration(
-              labelText: 'Volume ICH (ml)',
-              hintText: 'Ex: 25',
-              border: OutlineInputBorder(),
+    return CalculatorScaffold(
+      title: 'ICH Score',
+      body: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Intracerebral Hemorrhage Score.',
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              textAlign: TextAlign.center,
             ),
-            keyboardType: TextInputType.number,
+          ),
+
+          QuestionCard<int>(
+            title: 'Idade',
+            value: _data.idade,
             onChanged: (val) {
-              final volume = double.tryParse(val) ?? 0;
-              if (volume < 30) {
-                setState(() => _data.volumeICH = 0);
-              } else if (volume <= 60) {
-                setState(() => _data.volumeICH = 1);
-              } else {
-                setState(() => _data.volumeICH = 2);
-              }
+              setState(() => _data.idade = val);
               onDataChanged();
             },
+            options: const [
+              QuestionOption(label: '< 80 anos', value: 0),
+              QuestionOption(label: '≥ 80 anos', value: 1),
+            ],
           ),
-          const SizedBox(height: 12),
-          _buildRadioItem('Localização ICH', ['Profunda/Lobar (0)', 'Infratentorial (1)'], _data.localizacaoICH, (val) {
-            setState(() => _data.localizacaoICH = val);
-            onDataChanged();
-          }),
-          _buildRadioItem('Nível de Consciência (GCS)', ['13-15 (0)', '5-12 (1)', '3-4 (2)'], _data.nivelConsciencia, (val) {
-            setState(() => _data.nivelConsciencia = val);
-            onDataChanged();
-          }),
-          _buildRadioItem('Origem ICH', ['Não traumática/Hipertensiva (0)', 'Traumática/Outras causas (1)'], _data.origemICH, (val) {
-            setState(() => _data.origemICH = val);
-            onDataChanged();
-          }),
-          const SizedBox(height: 16),
-          Card(
-            color: _getScoreColor(score),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text('ICH Score', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('$score', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(interpretacao, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarICH();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala ICH'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurpleAccent, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildRadioItem(String title, List<String> options, int value, ValueChanged<int> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            ...options.asMap().entries.map((entry) {
-              int index = entry.key;
-              String option = entry.value;
-              return RadioListTile<int>(
-                title: Text(option, style: const TextStyle(fontSize: 13)),
-                value: index,
-                groupValue: value,
-                onChanged: (val) => onChanged(val ?? 0),
-                activeColor: Colors.deepPurpleAccent,
-                dense: true,
-              );
-            }),
-          ],
-        ),
+           Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Volume do Hematoma (ABC/2)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2D3748))),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _volumeController,
+                   keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Volume (ml)',
+                    hintText: 'Ex: 25',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onChanged: (val) {
+                    final volume = double.tryParse(val) ?? 0;
+                    if (volume < 30) {
+                      setState(() => _data.volumeICH = 0);
+                    } else if (volume <= 60) {
+                      setState(() => _data.volumeICH = 1);
+                    } else {
+                      setState(() => _data.volumeICH = 2);
+                    }
+                    onDataChanged();
+                  },
+                ),
+                 const SizedBox(height: 8),
+                 Text('Pontos: ${_data.volumeICH}', style: const TextStyle(fontSize: 14, color: Colors.deepPurpleAccent, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+
+
+          QuestionCard<int>(
+            title: 'Localização',
+            value: _data.localizacaoICH,
+            onChanged: (val) {
+              setState(() => _data.localizacaoICH = val);
+              onDataChanged();
+            },
+            options: const [
+              QuestionOption(label: 'Supratentorial (Lobar/Profunda)', value: 0),
+              QuestionOption(label: 'Infratentorial', value: 1),
+            ],
+          ),
+
+          QuestionCard<int>(
+            title: 'Nível de Consciência (GCS)',
+            value: _data.nivelConsciencia,
+            onChanged: (val) {
+              setState(() => _data.nivelConsciencia = val);
+              onDataChanged();
+            },
+            options: const [
+              QuestionOption(label: '13 - 15', value: 0),
+              QuestionOption(label: '5 - 12', value: 1),
+              QuestionOption(label: '3 - 4', value: 2),
+            ],
+          ),
+
+          QuestionCard<int>(
+            title: 'Origem/Hemorragia',
+            value: _data.origemICH,
+            onChanged: (val) {
+              setState(() => _data.origemICH = val);
+              onDataChanged();
+            },
+            options: const [
+              QuestionOption(label: 'Não traumática / Hipertensiva', value: 0),
+              QuestionOption(label: 'Traumática / Outras causas', value: 1),
+            ],
+          ),
+
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _getScoreColor(score),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(score).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('ICH SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  '$score',
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                   decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                   child: Text(
+                    interpretacao,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarICH,
+        backgroundColor: Colors.deepPurpleAccent,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -236,4 +256,3 @@ class _ICHScreenState extends State<ICHScreen> with AutoSaveMixin {
     return Colors.red;
   }
 }
-

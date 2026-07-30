@@ -3,6 +3,8 @@ import '../models/mrs_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
 import '../helpers/auto_save_mixin.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class MRSScreen extends StatefulWidget {
   const MRSScreen({super.key});
@@ -101,213 +103,109 @@ class _MRSScreenState extends State<MRSScreen> with AutoSaveMixin {
     final score = _mrsData.score;
     final interpretacao = _mrsData.interpretacao;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Modified Rankin Scale (mRS)'),
-        centerTitle: true,
-        backgroundColor: Colors.deepPurple,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Selecione a descrição que melhor descreve o estado atual do paciente:',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-            ),
+    return CalculatorScaffold(
+      title: 'Modified Rankin Scale (mRS)',
+      body: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.blue[50], 
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.blue[100]!),
           ),
-          const SizedBox(height: 12),
-          
-          _buildCheckboxItem(
-            'Sem sintomas',
-            _mrsData.hasNoSymptoms,
-            (val) {
-              setState(() {
-                _mrsData.hasNoSymptoms = val;
-                _resetOthers('noSymptoms');
-              });
-              onDataChanged();
-            },
+          child: const Text(
+             'Selecione a descrição que melhor descreve o estado atual do paciente:',
+             style: TextStyle(
+               fontSize: 15,
+               fontWeight: FontWeight.w600,
+               color: Color(0xFF00509D),
+             ),
+             textAlign: TextAlign.center,
           ),
-          _buildCheckboxItem(
-            'Tem sintomas, mas sem limitações significativas (mRS 1)',
-            _mrsData.hasSymptomsNoLimit,
-            (val) {
-              setState(() {
-                _mrsData.hasSymptomsNoLimit = val;
-                _resetOthers('symptomsNoLimit');
-              });
-              onDataChanged();
-            },
-          ),
-          _buildCheckboxItem(
-            'Independente, mas com limitações em atividades prévias (mRS 2)',
-            _mrsData.independentButSomeLimit,
-            (val) {
-              setState(() {
-                _mrsData.independentButSomeLimit = val;
-                _resetOthers('independent');
-              });
-              onDataChanged();
-            },
-          ),
-          _buildCheckboxItem(
-            'Precisa de alguma ajuda, mas consegue caminhar sozinho (mRS 3)',
-            _mrsData.needsSomeHelp,
-            (val) {
-              setState(() {
-                _mrsData.needsSomeHelp = val;
-                _resetOthers('needsHelp');
-              });
-              onDataChanged();
-            },
-          ),
-          _buildCheckboxItem(
-            'Necessita de assistência para a maioria das atividades (mRS 4)',
-            _mrsData.needsAssistance,
-            (val) {
-              setState(() {
-                _mrsData.needsAssistance = val;
-                _resetOthers('needsAssistance');
-              });
-              onDataChanged();
-            },
-          ),
-          _buildCheckboxItem(
-            'Dependência grave/acamado (mRS 5)',
-            _mrsData.bedridden,
-            (val) {
-              setState(() {
-                _mrsData.bedridden = val;
-                _resetOthers('bedridden');
-              });
-              onDataChanged();
-            },
-          ),
-          _buildCheckboxItem(
-            'Óbito (mRS 6)',
-            _mrsData.deceased,
-            (val) {
-              setState(() {
-                _mrsData.deceased = val;
-                _resetOthers('deceased');
-              });
-              onDataChanged();
-            },
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Resultado
-          Card(
+        ),
+        
+        QuestionCard<String>(
+          title: "Estado Funcional",
+          value: _getSelectedValue(),
+          options: const [
+            QuestionOption(label: 'Sem sintomas (mRS 0)', value: 'noSymptoms'),
+            QuestionOption(label: 'Tem sintomas, mas sem limitações significativas (mRS 1)', value: 'symptomsNoLimit'),
+            QuestionOption(label: 'Independente, mas com limitações em atividades prévias (mRS 2)', value: 'independent'),
+            QuestionOption(label: 'Precisa de alguma ajuda, mas consegue caminhar sozinho (mRS 3)', value: 'needsHelp'),
+            QuestionOption(label: 'Necessita de assistência para a maioria das atividades (mRS 4)', value: 'needsAssistance'),
+            QuestionOption(label: 'Dependência grave/acamado (mRS 5)', value: 'bedridden'),
+            QuestionOption(label: 'Óbito (mRS 6)', value: 'deceased'),
+          ],
+          onChanged: (val) {
+            setState(() {
+              _resetOthers(val);
+            });
+            onDataChanged();
+          },
+        ),
+
+        // Result Card
+        Container(
+          margin: const EdgeInsets.only(top: 8, bottom: 24),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
             color: _getScoreColor(score),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text(
-                    'Pontuação mRS',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '$score',
-                    style: const TextStyle(
-                      fontSize: 42,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    interpretacao,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: _getScoreColor(score).withOpacity(0.4),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
               ),
-            ),
+            ],
           ),
-          
-          const SizedBox(height: 12),
-          
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Text(
-              'Observação: mRS é uma escala clínica global. Este formulário é um assistente. A classificação final deve ser feita por um clínico experiente.',
-              style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
-            ),
-          ),
-          
-          const SizedBox(height: 20),
-          
-          // Botões
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarMRS();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala mRS'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
+          child: Column(
             children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  icon: const Icon(Icons.arrow_back),
-                  label: const Text('Voltar'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
+              const Text(
+                'Pontuação mRS',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.popUntil(context, (route) => route.isFirst);
-                  },
-                  icon: const Icon(Icons.home),
-                  label: const Text('Início'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
+              const SizedBox(height: 8),
+              Text(
+                '$score',
+                style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                 decoration: BoxDecoration(
+                   color: Colors.white.withOpacity(0.2),
+                   borderRadius: BorderRadius.circular(12),
+                 ),
+                 child: Text(
+                  interpretacao,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ],
           ),
-        ],
+        ),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarMRS,
+        backgroundColor: _getScoreColor(score),
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
+  }
+
+  String _getSelectedValue() {
+    if (_mrsData.hasNoSymptoms) return 'noSymptoms';
+    if (_mrsData.hasSymptomsNoLimit) return 'symptomsNoLimit';
+    if (_mrsData.independentButSomeLimit) return 'independent';
+    if (_mrsData.needsSomeHelp) return 'needsHelp';
+    if (_mrsData.needsAssistance) return 'needsAssistance';
+    if (_mrsData.bedridden) return 'bedridden';
+    if (_mrsData.deceased) return 'deceased';
+    return '';
   }
 
   void _resetOthers(String selected) {
@@ -344,27 +242,12 @@ class _MRSScreenState extends State<MRSScreen> with AutoSaveMixin {
     }
   }
 
-  Widget _buildCheckboxItem(String title, bool value, ValueChanged<bool> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: RadioListTile<bool>(
-        title: Text(title, style: const TextStyle(fontSize: 14)),
-        value: true,
-        groupValue: value ? true : null,
-        onChanged: (val) => onChanged(val ?? false),
-        activeColor: Colors.deepPurple,
-        dense: true,
-      ),
-    );
-  }
-
   Color _getScoreColor(int score) {
     if (score == 0 || score == 1) return Colors.green;
     if (score == 2) return Colors.lightGreen;
     if (score == 3) return Colors.orange;
     if (score == 4) return Colors.deepOrange;
     if (score == 5) return Colors.red;
-    return Colors.black;
+    return Colors.black; // deceased
   }
 }

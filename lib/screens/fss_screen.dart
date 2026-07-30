@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/fss_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
 
 class FSSScreen extends StatefulWidget {
   const FSSScreen({super.key});
@@ -43,54 +44,44 @@ class _FSSScreenState extends State<FSSScreen> {
             action: SnackBarAction(
               label: 'Ver Relatório',
               textColor: Colors.white,
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/report');
-              },
+              onPressed: () => Navigator.pushReplacementNamed(context, '/report'),
             ),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao salvar: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red));
       }
     }
   }
 
   Widget _buildSliderItem(String title, int value, ValueChanged<int> onChanged) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Discordo totalmente (1)', style: TextStyle(fontSize: 11)),
-                Text('$value', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                const Text('Concordo totalmente (7)', style: TextStyle(fontSize: 11)),
-              ],
-            ),
-            Slider(
-              value: value.toDouble(),
-              min: 1,
-              max: 7,
-              divisions: 6,
-              onChanged: (val) => onChanged(val.toInt()),
-              activeColor: Colors.orange,
-            ),
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+           Text(title, style: const TextStyle(fontSize: 14)),
+           const SizedBox(height: 4),
+           Row(
+             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+             children: [
+               const Text('Discordo (1)', style: TextStyle(fontSize: 11, color: Colors.grey)),
+               Text('$value', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange)),
+               const Text('Concordo (7)', style: TextStyle(fontSize: 11, color: Colors.grey)),
+             ],
+           ),
+           SliderTheme(
+             data: SliderTheme.of(context).copyWith(activeTrackColor: Colors.orange, thumbColor: Colors.orange),
+             child: Slider(
+               value: value.toDouble(),
+               min: 1, max: 7, divisions: 6,
+               onChanged: (val) => onChanged(val.toInt()),
+             ),
+           ),
+           const Divider(),
+        ],
       ),
     );
   }
@@ -98,79 +89,64 @@ class _FSSScreenState extends State<FSSScreen> {
   @override
   Widget build(BuildContext context) {
     final avgScore = _data.averageScore;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Fatigue Severity Scale (FSS)'),
-        centerTitle: true,
-        backgroundColor: Colors.orange,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Fatigue Severity Scale',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
+    return CalculatorScaffold(
+      title: 'FSS - Fatigue Severity Scale',
+      body: [
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Avalie de 1 (Discordo) a 7 (Concordo)',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+              textAlign: TextAlign.center,
+            ),
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'Avalie cada afirmação de 1 (Discordo totalmente) a 7 (Concordo totalmente)',
-            style: TextStyle(fontSize: 12),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          _buildSliderItem('1. Minha motivação é menor quando estou fatigado', _data.item1, (val) => setState(() => _data.item1 = val)),
-          _buildSliderItem('2. O exercício produz sensação de fadiga', _data.item2, (val) => setState(() => _data.item2 = val)),
-          _buildSliderItem('3. Eu me sinto facilmente fatigado', _data.item3, (val) => setState(() => _data.item3 = val)),
-          _buildSliderItem('4. A fadiga interfere com meu funcionamento físico', _data.item4, (val) => setState(() => _data.item4 = val)),
-          _buildSliderItem('5. A fadiga causa frequentes problemas para mim', _data.item5, (val) => setState(() => _data.item5 = val)),
-          _buildSliderItem('6. Minha fadiga impede o desempenho de certas tarefas físicas', _data.item6, (val) => setState(() => _data.item6 = val)),
-          _buildSliderItem('7. A fadiga interfere com a realização de certas responsabilidades', _data.item7, (val) => setState(() => _data.item7 = val)),
-          _buildSliderItem('8. A fadiga está entre meus três sintomas mais incapacitantes', _data.item8, (val) => setState(() => _data.item8 = val)),
-          _buildSliderItem('9. A fadiga interfere com meu trabalho, família ou vida social', _data.item9, (val) => setState(() => _data.item9 = val)),
-          const SizedBox(height: 16),
+          
           Card(
-            color: avgScore >= 4.0 ? Colors.red : avgScore >= 3.0 ? Colors.orange : Colors.green,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  const Text('Score Médio FSS', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('${avgScore.toStringAsFixed(2)}/7.0', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
+                  _buildSliderItem('1. Minha motivação é menor quando estou fatigado', _data.item1, (val) => setState(() => _data.item1 = val)),
+                  _buildSliderItem('2. O exercício produz sensação de fadiga', _data.item2, (val) => setState(() => _data.item2 = val)),
+                  _buildSliderItem('3. Eu me sinto facilmente fatigado', _data.item3, (val) => setState(() => _data.item3 = val)),
+                  _buildSliderItem('4. A fadiga interfere com meu funcionamento físico', _data.item4, (val) => setState(() => _data.item4 = val)),
+                  _buildSliderItem('5. A fadiga causa frequentes problemas para mim', _data.item5, (val) => setState(() => _data.item5 = val)),
+                  _buildSliderItem('6. Minha fadiga impede o desempenho de certas tarefas físicas', _data.item6, (val) => setState(() => _data.item6 = val)),
+                  _buildSliderItem('7. A fadiga interfere com a realização de certas responsabilidades', _data.item7, (val) => setState(() => _data.item7 = val)),
+                  _buildSliderItem('8. A fadiga está entre meus três sintomas mais incapacitantes', _data.item8, (val) => setState(() => _data.item8 = val)),
+                  _buildSliderItem('9. A fadiga interfere com meu trabalho, família ou vida social', _data.item9, (val) => setState(() => _data.item9 = val)),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarFSS();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala FSS'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: avgScore >= 4.0 ? Colors.red : avgScore >= 3.0 ? Colors.orange : Colors.green,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: (avgScore >= 4.0 ? Colors.red : avgScore >= 3.0 ? Colors.orange : Colors.green).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('FSS SCORE MÉDIO', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                 const SizedBox(height: 8),
+                Text(avgScore.toStringAsFixed(2), style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1)),
+                const SizedBox(height: 12),
+                Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white), textAlign: TextAlign.center),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-        ],
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarFSS,
+        backgroundColor: Colors.orange,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }

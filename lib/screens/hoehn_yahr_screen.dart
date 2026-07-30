@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/hoehn_yahr_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class HoehnYahrScreen extends StatefulWidget {
   const HoehnYahrScreen({super.key});
@@ -52,88 +54,67 @@ class _HoehnYahrScreenState extends State<HoehnYahrScreen> {
     }
   }
 
-  Widget _buildStageOption(int stage, String title) {
-    final isSelected = _data.stage == stage;
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: isSelected ? 4 : 1,
-      color: isSelected ? Colors.blue.shade50 : null,
-      child: RadioListTile<int>(
-        title: Text('Estágio $stage: $title', style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
-        value: stage,
-        groupValue: _data.stage,
-        onChanged: (val) => setState(() => _data.stage = val ?? 0),
-        activeColor: Colors.blue,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Hoehn and Yahr Scale'),
-        centerTitle: true,
-        backgroundColor: Colors.blue,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Hoehn and Yahr Scale - Estadiamento da Doença de Parkinson',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+    return CalculatorScaffold(
+      title: 'Hoehn & Yahr',
+      body: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Text(
+            'Estadiamento da Doença de Parkinson.',
+            style: TextStyle(color: Colors.grey[600], fontSize: 14),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 16),
-          _buildStageOption(0, 'Sem sinais de doença'),
-          _buildStageOption(1, 'Doença unilateral apenas'),
-          _buildStageOption(2, 'Doença bilateral sem comprometimento do equilíbrio'),
-          _buildStageOption(3, 'Doença bilateral leve a moderada com comprometimento postural. O paciente é fisicamente independente.'),
-          _buildStageOption(4, 'Incapacidade grave; ainda é capaz de andar ou ficar em pé sem ajuda'),
-          _buildStageOption(5, 'Confinado à cadeira de rodas ou acamado, a menos que auxiliado'),
-          const SizedBox(height: 16),
-          if (_data.stage > 0)
-            Card(
+        ),
+
+        QuestionCard<int>(
+          title: 'Estágio Clínico',
+          subtitle: 'Selecione a melhor descrição para o paciente.',
+          value: _data.stage,
+          onChanged: (v) => setState(() => _data.stage = v),
+          options: const [
+            QuestionOption(label: '0 - Sem sinais de doença', value: 0),
+            QuestionOption(label: '1 - Doença unilateral apenas', value: 1),
+            QuestionOption(label: '2 - Doença bilateral sem comprometimento do equilíbrio', value: 2),
+            QuestionOption(label: '3 - Doença bilateral leve/moderada; equilíbrio comprometido; independente', value: 3),
+            QuestionOption(label: '4 - Incapacidade grave; deambula sem ajuda', value: 4), // Shortened for UI fit
+            QuestionOption(label: '5 - Confinado à cadeira de rodas ou leito', value: 5),
+          ],
+        ),
+
+        if (_data.stage > 0)
+          Container(
+            margin: const EdgeInsets.only(top: 16),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
               color: Colors.blue.shade50,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.blue.shade100),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Text('Estágio ${_data.stage}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    Text(_data.stageDescription, style: const TextStyle(fontSize: 14)),
-                    const SizedBox(height: 8),
-                    Text(_data.interpretation, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.blue.shade700)),
+                    Icon(Icons.info, color: Colors.blue.shade800),
+                    const SizedBox(width: 8),
+                    Text('Interpretação', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue.shade900)),
                   ],
                 ),
-              ),
-            ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarHoehnYahr();
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala Hoehn and Yahr'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+                const SizedBox(height: 12),
+                Text(_data.stageDescription, style: const TextStyle(fontSize: 14, color: Colors.black87)),
+                const SizedBox(height: 8),
+                Text(_data.interpretation, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blue.shade800)),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-        ],
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarHoehnYahr,
+        backgroundColor: Colors.blue,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }

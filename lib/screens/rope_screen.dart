@@ -4,6 +4,7 @@ import '../models/rope_data.dart';
 import '../models/completed_score.dart';
 import '../services/patient_service.dart';
 import '../helpers/auto_save_mixin.dart';
+import '../widgets/calculator_scaffold.dart';
 
 class RopeScreen extends StatefulWidget {
   const RopeScreen({super.key});
@@ -20,9 +21,7 @@ class _RopeScreenState extends State<RopeScreen> with AutoSaveMixin {
   String get scaleName => 'rope';
 
   @override
-  Map<String, dynamic> getDataToSave() {
-    return _data.toJson();
-  }
+  Map<String, dynamic> getDataToSave() => _data.toJson();
 
   @override
   Future<void> restoreData(Map<String, dynamic> data) async {
@@ -34,9 +33,7 @@ class _RopeScreenState extends State<RopeScreen> with AutoSaveMixin {
       _data.fumante = savedData.fumante;
       _data.infartoCortical = savedData.infartoCortical;
       _data.idade = savedData.idade;
-      if (_data.idade != null) {
-        _idadeController.text = _data.idade.toString();
-      }
+      if (_data.idade != null) _idadeController.text = _data.idade.toString();
     });
   }
 
@@ -49,14 +46,11 @@ class _RopeScreenState extends State<RopeScreen> with AutoSaveMixin {
 
   Future<void> _loadPatientData() async {
     final patient = await PatientService.loadPatientData();
-    if (patient != null && patient.idade != null) {
-       // Só preenche se ainda não tiver valor (para não sobrescrever input manual salvo)
-       if (_data.idade == null) {
-         setState(() {
-           _data.idade = patient.idade;
-           _idadeController.text = patient.idade.toString();
-         });
-       }
+    if (patient != null && patient.idade != null && _data.idade == null) {
+       setState(() {
+         _data.idade = patient.idade;
+         _idadeController.text = patient.idade.toString();
+       });
     }
   }
 
@@ -73,199 +67,136 @@ class _RopeScreenState extends State<RopeScreen> with AutoSaveMixin {
       clearTemporaryData();
       
       if (mounted) {
-        showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Resultado RoPE'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                 Text(
-                   '${_data.score} Pontos',
-                   style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.blue),
-                 ),
-                 const SizedBox(height: 16),
-                 Text(
-                   _data.interpretacao,
-                   textAlign: TextAlign.center,
-                   style: const TextStyle(fontSize: 18),
-                 ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(ctx); // Fecha dialog
-                  Navigator.pushReplacementNamed(context, '/report'); // Vai para relatórios
-                },
-                child: const Text('Ver Relatório'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('OK'),
-              ),
-            ],
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('RoPE Score salvo/calculado!'),
+            backgroundColor: Colors.blueAccent,
+            action: SnackBarAction(label: 'Relatório', textColor: Colors.white, onPressed: () => Navigator.pushReplacementNamed(context, '/report')),
           ),
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao salvar: $e'), backgroundColor: Colors.red),
-        );
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('RoPE Score'),
-        centerTitle: true,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Risk of Paradoxical Embolism (RoPE) Score',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
+    final score = _data.score;
+    return CalculatorScaffold(
+      title: 'RoPE Score',
+      body: [
+          const Padding(
+             padding: EdgeInsets.only(bottom: 16),
+             child: Text('Risk of Paradoxical Embolism\nIdentificação de FOP em AVC criptogênico', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'Identificação de FOP relacionado a AVC em pacientes com AVC criptogênico.',
-            style: TextStyle(fontSize: 14, color: Colors.grey),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
           
-          _buildAgeSection(),
-          const SizedBox(height: 16),
-          _buildSwitchItem(
-            'Sem Histórico de Hipertensão (+1)',
-            'Paciente NÃO tem histórico de hipertensão?',
-            _data.historicoHipertensao == false, // Switch ON means "No Hypertension" (so we confirm the condition for +1)
-            (val) {
-              setState(() => _data.historicoHipertensao = !val); // If val is true (Switch ON), it means "No HTN", so property is false
-              onDataChanged();
-            },
-          ),
-          _buildSwitchItem(
-            'Sem Histórico de Diabetes (+1)',
-            'Paciente NÃO tem histórico de diabetes?',
-             _data.historicoDiabetes == false,
-            (val) {
-              setState(() => _data.historicoDiabetes = !val);
-              onDataChanged();
-            },
-          ),
-          _buildSwitchItem(
-            'Sem Histórico de AVC/AIT (+1)',
-            'Paciente NÃO tem histórico de AVC ou AIT prévio?',
-             _data.historicoAVC_AIT == false,
-            (val) {
-               setState(() => _data.historicoAVC_AIT = !val);
-               onDataChanged();
-            },
-          ),
-          _buildSwitchItem(
-            'Não Fumante (+1)',
-            'Paciente NÃO é fumante?',
-            _data.fumante == false,
-            (val) {
-              setState(() => _data.fumante = !val);
-              onDataChanged();
-            },
-          ),
-          _buildSwitchItem(
-            'Infarto Cortical em Imagem (+1)',
-            'Exame de imagem mostra infarto cortical?',
-            _data.infartoCortical == true,
-            (val) {
-              setState(() => _data.infartoCortical = val); // For this one, YES adds point, so val directly maps
-              onDataChanged();
-            },
-            isPositiveQuestion: true, // Visual cue
-          ),
-
-          const SizedBox(height: 24),
           Card(
-            color: Colors.blue.shade50,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  const Text('Pontuação Estimada', style: TextStyle(fontSize: 16)),
-                  Text(
-                    '${_data.score}', 
-                    style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.blue)
-                  ),
-                ],
-              ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+             child: Padding(
+               padding: const EdgeInsets.all(16),
+               child: Column(
+                 crossAxisAlignment: CrossAxisAlignment.start,
+                 children: [
+                    const Text('1. Idade', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _idadeController,
+                      decoration: const InputDecoration(labelText: 'Idade (anos)', border: OutlineInputBorder(), hintText: 'Ex: 45'),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      onChanged: (val) {
+                        setState(() => _data.idade = int.tryParse(val));
+                        onDataChanged();
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('2. Histórico', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    
+                    SwitchListTile(
+                      title: const Text('Sem Hipertensão (+1 se habilitado)'),
+                      subtitle: const Text('Paciente NÃO tem hipertensão?'),
+                      value: _data.historicoHipertensao == false,
+                      onChanged: (val) {
+                         setState(() => _data.historicoHipertensao = !val);
+                         onDataChanged();
+                      },
+                      activeColor: Colors.blueAccent,
+                    ),
+                    SwitchListTile(
+                      title: const Text('Sem Diabetes (+1 se habilitado)'),
+                      subtitle: const Text('Paciente NÃO tem diabetes?'),
+                      value: _data.historicoDiabetes == false,
+                      onChanged: (val) {
+                         setState(() => _data.historicoDiabetes = !val);
+                         onDataChanged();
+                      },
+                      activeColor: Colors.blueAccent,
+                    ),
+                    SwitchListTile(
+                      title: const Text('Sem AVC/AIT Prévio (+1 se habilitado)'),
+                      subtitle: const Text('Paciente NÃO tem histórico?'),
+                      value: _data.historicoAVC_AIT == false,
+                      onChanged: (val) {
+                         setState(() => _data.historicoAVC_AIT = !val);
+                         onDataChanged();
+                      },
+                      activeColor: Colors.blueAccent,
+                    ),
+                     SwitchListTile(
+                      title: const Text('Não Fumante (+1 se habilitado)'),
+                      subtitle: const Text('Paciente NÃO fuma?'),
+                      value: _data.fumante == false,
+                      onChanged: (val) {
+                         setState(() => _data.fumante = !val);
+                         onDataChanged();
+                      },
+                      activeColor: Colors.blueAccent,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('3. Imagem', style: TextStyle(fontWeight: FontWeight.bold)),
+                    SwitchListTile(
+                      title: const Text('Infarto Cortical (+1)'),
+                      subtitle: const Text('Imagem mostra infarto cortical?'),
+                      value: _data.infartoCortical == true,
+                      onChanged: (val) {
+                         setState(() => _data.infartoCortical = val);
+                         onDataChanged();
+                      },
+                      activeColor: Colors.blueAccent,
+                    ),
+                 ],
+               ),
+             ),
+          ),
+
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.blueAccent,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: Colors.blueAccent.withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('RoPE SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                 const SizedBox(height: 8),
+                Text('$score', style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1)),
+                const SizedBox(height: 12),
+                Text(_data.interpretacao, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white), textAlign: TextAlign.center),
+              ],
             ),
           ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await _salvarRope();
-            },
-            icon: const Icon(Icons.calculate),
-            label: const Text('Calcular e Salvar'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              textStyle: const TextStyle(fontSize: 18),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAgeSection() {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            const Icon(Icons.calendar_today, color: Colors.blue),
-            const SizedBox(width: 16),
-            Expanded(
-              child: TextFormField(
-                controller: _idadeController,
-                decoration: const InputDecoration(
-                  labelText: 'Idade (anos)',
-                  border: OutlineInputBorder(),
-                  helperText: '18-29 (5pts), 30-39 (4pts), 40-49 (3pts), 50-59 (2pts), 60-69 (1pt)',
-                  helperMaxLines: 2,
-                ),
-                keyboardType: TextInputType.number,
-                
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                onChanged: (val) {
-                  setState(() {
-                    _data.idade = int.tryParse(val);
-                  });
-                  onDataChanged();
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSwitchItem(String title, String subtitle, bool value, Function(bool) onChanged, {bool isPositiveQuestion = false}) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: SwitchListTile(
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(subtitle),
-        value: value,
-        onChanged: onChanged,
-        activeColor: Colors.green,
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarRope,
+        backgroundColor: Colors.blueAccent,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }

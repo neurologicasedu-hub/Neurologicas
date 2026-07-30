@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/gds_data.dart';
 import '../services/patient_service.dart';
 import '../models/completed_score.dart';
+import '../widgets/calculator_scaffold.dart';
+import '../widgets/question_card.dart';
 
 class GDSScreen extends StatefulWidget {
   const GDSScreen({super.key});
@@ -65,119 +67,106 @@ class _GDSScreenState extends State<GDSScreen> {
     }
   }
 
-  Widget _buildQuestionItem(int index, String question, int value, ValueChanged<int> onChanged) {
-    final itensInvertidos = [4, 6, 10, 12]; // Itens 5, 7, 11, 13 (base 0)
-    final isInvertido = itensInvertidos.contains(index);
-    
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text('${index + 1}. $question', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                ),
-                if (isInvertido)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(color: Colors.orange.shade100, borderRadius: BorderRadius.circular(4)),
-                    child: Text('Invertido', style: TextStyle(fontSize: 9, color: Colors.orange.shade900)),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            RadioListTile<int>(
-              title: const Text('Sim', style: TextStyle(fontSize: 12)),
-              value: 1,
-              groupValue: value,
-              onChanged: (val) => onChanged(val ?? 0),
-              activeColor: Colors.teal,
-              dense: true,
-            ),
-            RadioListTile<int>(
-              title: const Text('Não', style: TextStyle(fontSize: 12)),
-              value: 0,
-              groupValue: value,
-              onChanged: (val) => onChanged(val ?? 0),
-              activeColor: Colors.teal,
-              dense: true,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final score = _data.totalScore;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('GDS-15'),
-        centerTitle: true,
-        backgroundColor: Colors.teal,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            color: Colors.teal.shade50,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Instruções', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 6),
-                  const Text('Responda SIM ou NÃO para cada pergunta baseado em como você se sentiu na última semana.', style: TextStyle(fontSize: 11)),
-                  const SizedBox(height: 4),
-                  Text('Nota: Alguns itens são invertidos na pontuação (marcados com etiqueta "Invertido").', style: TextStyle(fontSize: 10, color: Colors.teal.shade800, fontStyle: FontStyle.italic)),
-                ],
-              ),
+    return CalculatorScaffold(
+      title: 'GDS-15',
+      body: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              'Escala de Depressão Geriátrica (15 itens). Responda com base na última semana.',
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              textAlign: TextAlign.center,
             ),
           ),
+
           ...List.generate(15, (i) => _buildQuestionItem(i, _questions[i], _data.respostas[i], (v) => setState(() => _data.respostas[i] = v))),
-          const SizedBox(height: 16),
-          Card(
-            color: score <= 5 ? Colors.green : score <= 10 ? Colors.orange : Colors.red,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 6,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text('GDS Score', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('$score/15', style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(_data.interpretation, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white), textAlign: TextAlign.center),
-                ],
-              ),
+          
+          // Result Card
+          Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 24),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _getScoreColor(score),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: _getScoreColor(score).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('GDS SCORE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 8),
+                Text(
+                  '$score',
+                  style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Colors.white, height: 1),
+                ),
+                const Text(
+                  '/ 15',
+                  style: TextStyle(fontSize: 18, color: Colors.white70),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                   decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                   child: Text(
+                    _data.interpretation,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: _salvarGDS,
-            icon: const Icon(Icons.save),
-            label: const Text('Salvar Escala GDS'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Voltar'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
-          ),
-        ],
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _salvarGDS,
+        backgroundColor: Colors.teal,
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text('Salvar Resultado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
-}
 
+  Widget _buildQuestionItem(int index, String question, int value, ValueChanged<int> onChanged) {
+    // Logic for inverted items (Index 0-based): 4, 6, 10, 12.
+    // Standard items: Yes=1 (Depressed), No=0 (Normal) ? 
+    // Wait, let's verify GDS scoring.
+    // Item 1: "Are you satisfied?" Yes(0), No(1). (Normal is Yes)
+    // Item 2: "Dropped activities?" Yes(1), No(0). (Depressed is Yes)
+    // So "Yes=1" is standard for depressed symptoms. "Yes=0" for positive items.
+    
+    // GDSData model usually expects 0 or 1 score, OR raw answer?
+    // Let's check `gds_data.dart` logic implicitly via `_data.respostas`.
+    // The previous implementation passed `value` directly to `_data.respostas`.
+    // Previous implementation RadioListTile values:
+    // Sim = 1, Não = 0.
+    // BUT `gds_data` calculates score. Does it handle inversion?
+    // If `gds_data` expects 1=Sim, 0=Nao, and calculates score internally based on index, then I should send 1/0.
+    // If `gds_data` simply sums the array, then I must send the SCORE (1 or 0) directly from the UI logic.
+    // Let's check previous file `gds_screen.dart` logic:
+    // `RadioListTile ... value: 1 ... title: Sim`
+    // `RadioListTile ... value: 0 ... title: Não`
+    // It seems it just stores 1 for Sim and 0 for No. The scoring logic must be in `GDSData`.
+    // I will preserve this behavior: Send 1 for Sim, 0 for No.
+    // Visuals: I should show "Sim" and "Não".
+    
+    return QuestionCard<int>(
+      title: '${index + 1}. $question',
+      value: value,
+      onChanged: onChanged,
+      options: const [
+        QuestionOption(label: 'Sim', value: 1),
+        QuestionOption(label: 'Não', value: 0),
+      ],
+    );
+  }
+
+  Color _getScoreColor(int score) {
+    if (score <= 5) return Colors.green;
+    if (score <= 10) return Colors.orange;
+    return Colors.red;
+  }
+}
