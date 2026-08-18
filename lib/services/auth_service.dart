@@ -24,6 +24,17 @@ class AuthService {
       );
       return userCredential;
     } on FirebaseAuthException catch (e) {
+      // Se for conta de teste oficial e ainda não existir no Firebase, cadastra automaticamente
+      if ((e.code == 'user-not-found' || e.code == 'invalid-credential') &&
+          (email.trim().toLowerCase() == 'android.teste@neurologicas.app' ||
+           email.trim().toLowerCase() == 'apple.teste@neurologicas.app')) {
+        try {
+          return await _auth.createUserWithEmailAndPassword(
+            email: email.trim(),
+            password: password,
+          );
+        } catch (_) {}
+      }
       throw _handleAuthException(e);
     }
   }

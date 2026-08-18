@@ -106,6 +106,9 @@ class SubscriptionService {
   // Lista de e-mails com acesso Premium Vitalício garantido (Whitelist)
   static const List<String> _whitelistEmails = [
     'playsmangle8@gmail.com',
+    'android.teste@neurologicas.app',
+    'apple.teste@neurologicas.app',
+    'teste@neurologicas.app',
   ];
 
   bool isEmailWhitelisted(String? email) {
