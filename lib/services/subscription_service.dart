@@ -103,10 +103,32 @@ class SubscriptionService {
     }
   }
 
+  // Lista de e-mails com acesso Premium Vitalício garantido (Whitelist)
+  static const List<String> _whitelistEmails = [
+    'playsmangle8@gmail.com',
+  ];
+
+  bool isEmailWhitelisted(String? email) {
+    if (email == null) return false;
+    return _whitelistEmails.any((e) => e.toLowerCase() == email.trim().toLowerCase());
+  }
+
   // Buscar status de assinatura do Firestore
   Future<SubscriptionStatus> getSubscriptionStatus() async {
     final user = _auth.currentUser;
     if (user == null) return SubscriptionStatus.none();
+
+    // 1. Verificar se usuário está na whitelist
+    if (isEmailWhitelisted(user.email)) {
+      return SubscriptionStatus(
+        status: 'active',
+        productId: 'premium_whitelist',
+        startDate: DateTime(2025, 1, 1),
+        endDate: DateTime(2099, 12, 31),
+        platform: 'whitelist',
+        lastVerification: DateTime.now(),
+      );
+    }
 
     try {
       // Primeiro tenta buscar do cache local (rápido)

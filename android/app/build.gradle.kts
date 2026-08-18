@@ -11,7 +11,7 @@ import java.util.Properties
 import java.io.FileInputStream
 android {
     namespace = "com.neurologicas.app"
-    compileSdk = 35
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -42,7 +42,7 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        targetSdk = 35
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -66,8 +66,8 @@ dependencies {
 
 configurations.all {
     resolutionStrategy {
-        force("com.android.billingclient:billing:7.1.1")
-        force("com.android.billingclient:billing-ktx:7.1.1")
+        force("com.android.billingclient:billing:8.0.0")
+        force("com.android.billingclient:billing-ktx:8.0.0")
     }
 }
 

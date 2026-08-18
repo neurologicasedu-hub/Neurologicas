@@ -18,12 +18,15 @@ class SubscriptionStatus {
   bool get isActive {
     if (status != 'active') return false;
     if (endDate == null) return true;
-    return endDate!.isAfter(DateTime.now());
+    // Adiciona 3 dias de tolerância para processamento de renovação da loja
+    final graceEndDate = endDate!.add(const Duration(days: 3));
+    return graceEndDate.isAfter(DateTime.now());
   }
 
   bool get isExpired {
     if (endDate == null) return false;
-    return endDate!.isBefore(DateTime.now());
+    final graceEndDate = endDate!.add(const Duration(days: 3));
+    return graceEndDate.isBefore(DateTime.now());
   }
 
   Map<String, dynamic> toMap() {

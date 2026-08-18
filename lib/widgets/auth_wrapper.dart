@@ -5,6 +5,7 @@ import '../screens/home_screen.dart';
 import '../screens/patient_data_screen.dart';
 import '../screens/patient_list_screen.dart';
 import '../services/subscription_service.dart';
+import '../services/purchase_service.dart';
 import '../services/patient_service.dart';
 
 class AuthWrapper extends StatefulWidget {
@@ -16,18 +17,23 @@ class AuthWrapper extends StatefulWidget {
 
 class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
   final SubscriptionService _subscriptionService = SubscriptionService();
+  final PurchaseService _purchaseService = PurchaseService();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     
-    // Iniciar verificação periódica quando usuário logar
+    // Iniciar PurchaseService e escutar compras
+    _purchaseService.initialize();
+
+    // Iniciar verificação quando usuário logar
     FirebaseAuth.instance.authStateChanges().listen((user) {
       if (user != null) {
         _subscriptionService.startPeriodicCheck();
-        // Verificar status imediatamente
-        _subscriptionService.checkIfExpired();
+        // Sincronizar compras ativas com a Google Play / App Store
+        _purchaseService.restorePurchases();
+        _subscriptionService.getSubscriptionStatus();
       } else {
         _subscriptionService.stopPeriodicCheck();
       }
@@ -57,11 +63,10 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // App voltou ao foreground - verificar assinatura
+      // App voltou ao foreground - sincronizar com a loja e atualizar assinatura
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        _subscriptionService.checkIfExpired();
-        // Atualizar status do Firestore
+        _purchaseService.restorePurchases();
         _subscriptionService.getSubscriptionStatus();
       }
     }

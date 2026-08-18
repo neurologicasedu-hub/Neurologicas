@@ -6,6 +6,10 @@ import '../models/subscription_status.dart';
 import 'subscription_service.dart';
 
 class PurchaseService {
+  static final PurchaseService _instance = PurchaseService._internal();
+  factory PurchaseService() => _instance;
+  PurchaseService._internal();
+
   final InAppPurchase _inAppPurchase = InAppPurchase.instance;
   final SubscriptionService _subscriptionService = SubscriptionService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -15,32 +19,42 @@ class PurchaseService {
   
   StreamSubscription<List<PurchaseDetails>>? _subscription;
   bool _isAvailable = false;
+  bool _isInitialized = false;
   List<ProductDetails> _products = [];
   ProductDetails? get premiumProduct => _products.isNotEmpty ? _products.first : null;
 
-  // Verificar se in-app purchase está disponível
+  // Verificar se in-app purchase está disponível e inicializar listener
   Future<bool> initialize() async {
-    _isAvailable = await _inAppPurchase.isAvailable();
-    
-    if (!_isAvailable) {
-      print('In-app purchase não está disponível');
-      return false;
+    if (_isInitialized) {
+      await loadProducts();
+      return _isAvailable;
     }
 
-    // Carregar produtos
-    await loadProducts();
+    try {
+      _isAvailable = await _inAppPurchase.isAvailable();
+      
+      if (!_isAvailable) {
+        print('In-app purchase não está disponível no dispositivo');
+        return false;
+      }
 
-    // Escutar atualizações de compras
-    _subscription = _inAppPurchase.purchaseStream.listen(
-      _handlePurchaseUpdates,
-      onDone: () => _subscription?.cancel(),
-      onError: (error) => print('Erro no stream de compras: $error'),
-    );
+      // Escutar atualizações de compras continuamente
+      _subscription?.cancel();
+      _subscription = _inAppPurchase.purchaseStream.listen(
+        _handlePurchaseUpdates,
+        onDone: () => _subscription?.cancel(),
+        onError: (error) => print('Erro no stream de compras: $error'),
+      );
 
-    // Restaurar compras anteriores
-    await restorePurchases();
+      // Carregar produtos
+      await loadProducts();
 
-    return true;
+      _isInitialized = true;
+      return true;
+    } catch (e) {
+      print('Erro ao inicializar PurchaseService: $e');
+      return false;
+    }
   }
 
   // Carregar produtos disponíveis
@@ -51,13 +65,13 @@ class PurchaseService {
           await _inAppPurchase.queryProductDetails(productIds);
 
       if (response.notFoundIDs.isNotEmpty) {
-        print('Produtos não encontrados: ${response.notFoundIDs}');
+        print('Produtos não encontrados na loja: ${response.notFoundIDs}');
       }
 
       _products = response.productDetails;
       
       if (_products.isEmpty) {
-        print('Nenhum produto encontrado. Certifique-se de que o produto está configurado nas lojas.');
+        print('Nenhum produto retornado pela loja.');
       }
     } catch (e) {
       print('Erro ao carregar produtos: $e');
@@ -67,12 +81,11 @@ class PurchaseService {
   // Comprar assinatura
   Future<bool> purchasePremium() async {
     if (!_isAvailable) {
-      print('In-app purchase não está disponível');
-      return false;
+      await initialize();
+      if (!_isAvailable) return false;
     }
 
     if (_products.isEmpty) {
-      print('Produtos não carregados');
       await loadProducts();
       if (_products.isEmpty) return false;
     }
@@ -82,8 +95,6 @@ class PurchaseService {
         productDetails: _products.first,
       );
 
-      // Para assinaturas, o pacote detecta automaticamente baseado no tipo de produto
-      // configurado nas lojas (subscription vs one-time purchase)
       await _inAppPurchase.buyNonConsumable(
         purchaseParam: purchaseParam,
       );
@@ -100,12 +111,10 @@ class PurchaseService {
       List<PurchaseDetails> purchaseDetailsList) async {
     for (final PurchaseDetails purchaseDetails in purchaseDetailsList) {
       if (purchaseDetails.status == PurchaseStatus.pending) {
-        // Compra pendente - aguardar confirmação
         continue;
       }
 
       if (purchaseDetails.status == PurchaseStatus.error) {
-        // Erro na compra
         print('Erro na compra: ${purchaseDetails.error}');
         await _completePurchase(purchaseDetails);
         continue;
@@ -119,31 +128,28 @@ class PurchaseService {
       }
 
       if (purchaseDetails.status == PurchaseStatus.canceled) {
-        // Compra cancelada
         print('Compra cancelada pelo usuário');
         await _completePurchase(purchaseDetails);
       }
     }
   }
 
-  // Processar compra bem-sucedida
+  // Processar compra bem-sucedida e renovação
   Future<void> _processSuccessfulPurchase(
       PurchaseDetails purchaseDetails) async {
     final user = _auth.currentUser;
     if (user == null) return;
 
     try {
-      // Verificar se é o produto correto
       if (purchaseDetails.productID != _productId) {
-        print('ID do produto não corresponde');
+        print('ID do produto diferente do esperado: ${purchaseDetails.productID}');
         return;
       }
 
-      // Calcular datas (assumindo assinatura mensal)
+      // Adiciona margem de 35 dias para compensar o ciclo de cobrança automática da Google/Apple
       final now = DateTime.now();
-      final endDate = now.add(const Duration(days: 30));
+      final endDate = now.add(const Duration(days: 35));
 
-      // Criar status de assinatura
       final status = SubscriptionStatus(
         status: 'active',
         startDate: now,
@@ -153,26 +159,34 @@ class PurchaseService {
         lastVerification: now,
       );
 
-      // Salvar no Firestore
+      // Salvar no Firestore e cache local
       await _subscriptionService.saveSubscriptionStatus(status);
 
-      print('Assinatura ativada com sucesso!');
+      print('✅ Assinatura verificada e ativada até: ${endDate.toIso8601String()}');
     } catch (e) {
-      print('Erro ao processar compra: $e');
+      print('Erro ao processar assinatura: $e');
     }
   }
 
-  // Finalizar compra (confirmar com a loja)
+  // Finalizar compra (confirmar com a loja para evitar auto-reembolso de 72h)
   Future<void> _completePurchase(PurchaseDetails purchaseDetails) async {
-    if (purchaseDetails.pendingCompletePurchase) {
-      await _inAppPurchase.completePurchase(purchaseDetails);
+    try {
+      if (purchaseDetails.pendingCompletePurchase) {
+        await _inAppPurchase.completePurchase(purchaseDetails);
+      }
+    } catch (e) {
+      print('Erro ao confirmar compra com a loja: $e');
     }
   }
 
-  // Restaurar compras anteriores
+  // Restaurar compras anteriores (consulta Google Play / App Store)
   Future<void> restorePurchases() async {
     try {
+      if (!_isAvailable) {
+        await initialize();
+      }
       await _inAppPurchase.restorePurchases();
+      print('🔄 Restauração de compras solicitada à loja.');
     } catch (e) {
       print('Erro ao restaurar compras: $e');
     }
@@ -187,6 +201,6 @@ class PurchaseService {
   void dispose() {
     _subscription?.cancel();
     _subscription = null;
+    _isInitialized = false;
   }
 }
-
