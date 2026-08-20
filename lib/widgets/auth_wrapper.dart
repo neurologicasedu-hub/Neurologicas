@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../screens/login_screen.dart';
@@ -31,8 +32,10 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
     FirebaseAuth.instance.authStateChanges().listen((user) {
       if (user != null) {
         _subscriptionService.startPeriodicCheck();
-        // Sincronizar compras ativas com a Google Play / App Store
-        _purchaseService.restorePurchases();
+        // Sincronizar compras ativas no Android (no iOS o restore exige clique do usuário para não abrir popup de Apple ID)
+        if (Platform.isAndroid) {
+          _purchaseService.restorePurchases();
+        }
         _subscriptionService.getSubscriptionStatus();
       } else {
         _subscriptionService.stopPeriodicCheck();
@@ -63,10 +66,12 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // App voltou ao foreground - sincronizar com a loja e atualizar assinatura
+      // App voltou ao foreground - atualizar assinatura
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        _purchaseService.restorePurchases();
+        if (Platform.isAndroid) {
+          _purchaseService.restorePurchases();
+        }
         _subscriptionService.getSubscriptionStatus();
       }
     }
