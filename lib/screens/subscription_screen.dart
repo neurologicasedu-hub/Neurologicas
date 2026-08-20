@@ -32,30 +32,48 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     });
 
     try {
-      // Inicializar serviço de compras
-      final available = await _purchaseService.initialize();
-      if (!available) {
-        setState(() {
-          _errorMessage =
-              'In-app purchase não está disponível neste dispositivo.';
-          _isLoading = false;
-        });
-        return;
+      // 1. Buscar status atual da assinatura
+      try {
+        final status = await _subscriptionService.getSubscriptionStatus().timeout(
+          const Duration(seconds: 3),
+          onTimeout: () => SubscriptionStatus.none(),
+        );
+        _currentStatus = status;
+      } catch (e) {
+        print('Erro ao buscar status: $e');
       }
 
-      // Buscar status atual
-      final status = await _subscriptionService.getSubscriptionStatus();
-      
-      setState(() {
-        _currentStatus = status;
-        _isInitialized = true;
-        _isLoading = false;
-      });
+      // 2. Tentar inicializar o serviço de compras na loja com timeout de 4 segundos
+      try {
+        final available = await _purchaseService.initialize().timeout(
+          const Duration(seconds: 4),
+          onTimeout: () {
+            print('Timeout ao conectar com a loja.');
+            return false;
+          },
+        );
+        if (!available) {
+          _errorMessage = 'In-app purchase indisponível ou aguardando homologação na Play Store / App Store.';
+        }
+      } catch (e) {
+        print('Erro ao conectar com a loja: $e');
+        _errorMessage = 'Não foi possível conectar com a loja de aplicativos.';
+      }
+
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Erro ao inicializar: ${e.toString()}';
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Erro ao inicializar: ${e.toString()}';
+          _isInitialized = true;
+          _isLoading = false;
+        });
+      }
     }
   }
 
