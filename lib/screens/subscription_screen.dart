@@ -43,21 +43,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         print('Erro ao buscar status: $e');
       }
 
-      // 2. Tentar inicializar o serviço de compras na loja com timeout de 4 segundos
+      // 2. Tentar inicializar o serviço de compras na loja com timeout de 10 segundos
       try {
-        final available = await _purchaseService.initialize().timeout(
-          const Duration(seconds: 4),
+        await _purchaseService.initialize().timeout(
+          const Duration(seconds: 10),
           onTimeout: () {
             print('Timeout ao conectar com a loja.');
             return false;
           },
         );
-        if (!available) {
-          _errorMessage = 'In-app purchase indisponível ou aguardando homologação na Play Store / App Store.';
-        }
       } catch (e) {
         print('Erro ao conectar com a loja: $e');
-        _errorMessage = 'Não foi possível conectar com a loja de aplicativos.';
       }
 
       if (mounted) {
@@ -87,7 +83,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       final success = await _purchaseService.purchasePremium();
       if (!success) {
         setState(() {
-          _errorMessage = 'Erro ao iniciar compra. Tente novamente.';
+          _errorMessage = 'In-app purchase indisponível no momento. Verifique se o produto "premium_monthly_br" está ativo e se o app foi baixado da loja oficial.';
           _isLoading = false;
         });
         return;
