@@ -89,32 +89,19 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         return;
       }
 
-      // Aguardar um pouco para processar a compra
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Verificar status atualizado
-      final status = await _subscriptionService.getSubscriptionStatus();
-      setState(() {
-        _currentStatus = status;
-        _isLoading = false;
-      });
-
-      if (status.isActive) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Assinatura ativada com sucesso!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          Navigator.of(context).pop();
-        }
+      // Desativar spinner do app assim que a janela da loja abrir
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Erro ao processar compra: ${e.toString()}';
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Erro ao processar compra: ${e.toString()}';
+          _isLoading = false;
+        });
+      }
     }
   }
 
