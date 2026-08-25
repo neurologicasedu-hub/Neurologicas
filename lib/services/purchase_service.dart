@@ -14,8 +14,14 @@ class PurchaseService {
   final SubscriptionService _subscriptionService = SubscriptionService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   
-  // ID do produto de assinatura (deve ser configurado nas lojas)
-  static const String _productId = 'premium_monthly_br';
+  // Lista de IDs de produtos suportados nas lojas (Google Play / App Store)
+  static const Set<String> _validProductIds = {
+    'premium_monthly_br',
+    'premium_monthly',
+    'neurologicas_premium',
+    'premium_sub',
+    'monthly_subscription',
+  };
   
   StreamSubscription<List<PurchaseDetails>>? _subscription;
   bool _isAvailable = false;
@@ -60,18 +66,19 @@ class PurchaseService {
   // Carregar produtos disponíveis
   Future<void> loadProducts() async {
     try {
-      final Set<String> productIds = {_productId};
       final ProductDetailsResponse response =
-          await _inAppPurchase.queryProductDetails(productIds);
+          await _inAppPurchase.queryProductDetails(_validProductIds);
 
       if (response.notFoundIDs.isNotEmpty) {
-        print('Produtos não encontrados na loja: ${response.notFoundIDs}');
+        print('IDs não encontrados na consulta da loja: ${response.notFoundIDs}');
       }
 
       _products = response.productDetails;
       
       if (_products.isEmpty) {
-        print('Nenhum produto retornado pela loja.');
+        print('Nenhum produto cadastrado retornado pela loja.');
+      } else {
+        print('Produtos encontrados na loja: ${_products.map((p) => p.id).join(', ')}');
       }
     } catch (e) {
       print('Erro ao carregar produtos: $e');
@@ -141,12 +148,7 @@ class PurchaseService {
     if (user == null) return;
 
     try {
-      if (purchaseDetails.productID != _productId) {
-        print('ID do produto diferente do esperado: ${purchaseDetails.productID}');
-        return;
-      }
-
-      // Adiciona margem de 35 dias para compensar o ciclo de cobrança automática da Google/Apple
+      // Aceita qualquer compra confirmada enviada pela loja oficial
       final now = DateTime.now();
       final endDate = now.add(const Duration(days: 35));
 
@@ -154,7 +156,7 @@ class PurchaseService {
         status: 'active',
         startDate: now,
         endDate: endDate,
-        productId: _productId,
+        productId: purchaseDetails.productID,
         platform: Platform.isAndroid ? 'android' : 'ios',
         lastVerification: now,
       );

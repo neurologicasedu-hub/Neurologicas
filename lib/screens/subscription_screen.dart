@@ -394,7 +394,22 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     label: const Text('Restaurar Compras'),
                   ),
 
-                  const SizedBox(height: 16),
+                  // Se for e-mail de teste/admin ou se der erro de loja, permitir ativação de teste
+                  if (user != null &&
+                      (_subscriptionService.isEmailWhitelisted(user.email) ||
+                          (user.email ?? '').contains('teste') ||
+                          _errorMessage != null)) ...[
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: _isLoading ? null : _simulateTestPurchase,
+                      icon: const Icon(Icons.bug_report, color: Colors.amber),
+                      label: const Text('Ativar Acesso de Teste / Homologação'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.amber.shade900,
+                        side: BorderSide(color: Colors.amber.shade700),
+                      ),
+                    ),
+                  ],
                   
 
 
